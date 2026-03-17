@@ -1,0 +1,391 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Создать ТЗ на Текст
+{% endblock %}
+{% from "components/info_block.html" import render_info_block %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Создать ТЗ на Текст</h1>
+
+{% set info_content %}
+<p>Эта страница является центральным узлом для подготовки технического задания (ТЗ) на текст. Здесь вы можете
+    собирать, редактировать и анализировать данные, полученные из других инструментов.</p>
+<ol class="list-decimal list-inside mt-2">
+    <li><strong>Сбор данных:</strong> Для начала работы соберите данные с помощью <a href="/top-sites"
+            class="text-blue-500 hover:underline">"Анализа ТОП-10"</a> и <a href="/page-analyzer"
+            class="text-blue-500 hover:underline">"Анализа страниц"</a>. Результаты их работы появятся в таблице ниже.
+    </li>
+    <li><strong>Редактирование:</strong> Все поля в таблице (Title, Description, LSI и т.д.) можно редактировать прямо
+        на месте.</li>
+    <li><strong>Генерация контента:</strong> На основе собранных данных вы можете автоматически сгенерировать структуру
+        заголовков и список LSI-слов с помощью AI.</li>
+    <li><strong>Копирование:</strong> Используйте кнопки "Копировать" для быстрого переноса данных в другие инструменты
+        или документы.</li>
+</ol>
+<p class="mt-2 font-semibold">Основной функционал для генерации и копирования данных находится в нижней части таблицы (в
+    футере).</p>
+
+{% endset %}
+{{ render_info_block("Описание функционала", info_content) }}
+
+<div class="overflow-x-auto mt-6">
+    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div class="flex items-center">
+                        <span>URL</span>
+                        <button id="copy-urls-btn" title="Копировать URLы" class="ml-2 p-1 action-btn-neutral rounded">
+                            Копировать в буфер обмена
+                            <!-- <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m-6 4h.01M9 16h.01" /></svg> -->
+                        </button>
+                    </div>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Title</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Объём текста</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    style="width: 400px;">
+                    Теги H1-H6</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    LSI-слова</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+            {% for result in results %}
+            <tr data-result-url="{{ result.url }}">
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <a href="{{ result.url }}" target="_blank" title="{{ result.url }}"
+                        class="text-blue-500 hover:underline truncate-link">{{ result.url }}</a>
+                </td>
+                <td class="px-6 py-4 whitespace-normal text-sm text-gray-900 dark:text-gray-200" contenteditable="true"
+                    data-field="title">{{ result.title or 'N/A' }}</td>
+                <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 dark:text-gray-400" contenteditable="true"
+                    data-field="description">{{ result.description or 'N/A' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200" contenteditable="true"
+                    data-field="text_length">{{ result.text_length or 'N/A' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <button class="toggle-content-btn text-blue-500 hover:underline">Показать/скрыть</button>
+                    <div class="content-to-toggle hidden mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800"
+                        contenteditable="true" data-field="headings">
+                        {% if result.headings %}
+                        {% set headings_data = from_json(result.headings) %}
+                        {% for h in headings_data %}
+                        <span>H{{ h.level }}: {{ h.text }}</span><br>
+                        {% endfor %}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <button class="toggle-content-btn text-blue-500 hover:underline">Показать/скрыть</button>
+                    <div class="content-to-toggle hidden mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800"
+                        contenteditable="true" data-field="lsi_words">
+                        {% if result.lsi_words %}
+                        {% set lsi_data = from_json(result.lsi_words) %}
+                        {% for word in lsi_data %}
+                        <span>{{ word }}</span><br>
+                        {% endfor %}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">Нет данных для отображения</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <textarea id="keyphrases-input"
+                        class="w-full min-h-36 p-2 border rounded bg-gray-50 dark:bg-gray-800"
+                        placeholder="Введите ключевые фразы, каждая с новой строки"></textarea>
+                    <div class="text-xs text-gray-500">Количество фраз: <span id="keyphrases-count">0</span></div>
+                    <button id="copy-keyphrases-btn"
+                        class="action-btn-neutral text-white font-bold py-1 px-2 rounded mt-2 text-xs">Копировать</button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>
+                <th scope="col" id="average-text-length"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div>Среднее:</div>
+                    <div id="average-text-value">N/A</div>
+                    <button id="copy-average-btn"
+                        class="action-btn-neutral text-white font-bold py-1 px-2 rounded mt-2 text-xs">Копировать</button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    style="width: 400px;">
+                    <button id="generate-headings-btn"
+                        class="analyze-selected-sites-btn action-btn text-white font-bold py-2 px-4 rounded">
+                        Сгенерировать структуру заголовков
+                    </button>
+                    <button id="get-last-task-headings-btn"
+                        class="action-btn-neutral text-white font-bold py-2 px-4 rounded mt-2">
+                        Получить из последней задачи
+                    </button>
+                    <div id="headings-generation-status" class="mt-2 text-sm"></div>
+                    <div id="headings-generation-result" contenteditable="true"
+                        class="mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800"></div>
+                    <button id="copy-headings-btn"
+                        class="action-btn-neutral text-white font-bold py-1 px-2 rounded mt-2 text-xs">Копировать</button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    style="width: 400px;">
+                    <button id="generate-lsi-btn"
+                        class="analyze-selected-sites-btn action-btn text-white font-bold py-2 px-4 rounded">
+                        Сгенерировать LSI
+                    </button>
+                    <button id="get-last-task-lsi-btn"
+                        class="action-btn-neutral text-white font-bold py-2 px-4 rounded mt-2">
+                        Получить из последней задачи
+                    </button>
+                    <div id="lsi-generation-status" class="mt-2 text-sm"></div>
+                    <div id="lsi-generation-result" contenteditable="true"
+                        class="mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800"></div>
+                    <button id="copy-lsi-btn"
+                        class="action-btn-neutral text-white font-bold py-1 px-2 rounded mt-2 text-xs">Копировать</button>
+                </th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="my-6 text-center">
+    <button id="transfer-to-generator-btn" class="action-btn text-white font-bold py-2 px-4 rounded text-lg">
+        Перенести данные в генератор статей
+    </button>
+</div>
+
+<div class="container mx-auto mt-8">
+    <h2 class="text-3xl font-bold mb-6">Задачи AI</h2>
+    <div id="task-accordion">
+        {% for task in ai_tasks %}
+        <div id="task-{{ task.id }}" class="task-accordion">
+            <div class="task-header">
+                <div class="flex-grow">
+                    <span class="font-bold text-sm">Задача #{{ task.id }}</span> -
+                    <span class="text-sm">{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="session-status
+                                     {% if task.status == 'completed' %}bg-green-200 text-green-800
+                                     {% elif task.status == 'running' %}bg-blue-200 text-blue-800
+                                     {% elif task.status == 'pending' %}bg-yellow-200 text-yellow-800
+                                     {% else %}bg-red-200 text-red-800{% endif %}">
+                        {% if task.status == 'completed' %}Выполнено
+                        {% elif task.status == 'running' %}В работе
+                        {% elif task.status == 'pending' %}В очереди
+                        {% else %}Ошибка{% endif %}
+                    </span>
+                </div>
+                <div class="task-actions">
+                    <button class="action-btn no-underline" onclick="downloadAiTask('{{ task.id }}')">TXT</button>
+                    <button class="toggle-btn button-open">Раскрыть</button>
+                    <button class="delete-btn" onclick="deleteAiTask('{{ task.id }}', event)">
+                        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                            class="inline-block">
+                            <g>
+                                <rect x="0" y="0" width="100" height="100" rx="15" ry="15" fill="#D80027" />
+                                <path d="M 20,20 L 80,80 M 80,20 L 20,80" stroke="white" stroke-width="12"
+                                    stroke-linecap="round" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="task-content hidden">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <!-- <h4 class="font-semibold mb-2">Системный промпт:</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ task.system_prompt }}</p>
+                    <hr class="my-4 dark:border-gray-600"> -->
+
+                    {% if task.results %}
+                    {% for result in task.results %}
+                    <div class="mb-4">
+                        <h5 class="font-semibold">Запрос:</h5>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded">{{
+                            result.user_message }}</p>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold">Ответ AI:</h5>
+                        <p
+                            class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded whitespace-pre-wrap">
+                            {{ result.ai_response }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-sm text-gray-500">Для этой задачи еще нет результатов. Статус: {{ task.status }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>Задачи для AI еще не создавались.</p>
+        {% endfor %}
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Логика для кнопок "Показать/скрыть" в основной таблице
+        document.querySelector('tbody').addEventListener('click', function (e) {
+            if (e.target && e.target.classList.contains('toggle-content-btn')) {
+                const content = e.target.nextElementSibling;
+                content.classList.toggle('hidden');
+            }
+        });
+
+        // Логика для аккордеона задач AI
+        const accordion = document.getElementById('task-accordion');
+        if (accordion) {
+            accordion.addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('toggle-btn')) {
+                    const header = e.target.closest('.task-header');
+                    const content = header.nextElementSibling;
+                    content.classList.toggle('hidden');
+                    e.target.textContent = content.classList.contains('hidden') ? 'Раскрыть' : 'Скрыть';
+                }
+            });
+        }
+
+        // Логика для скрытия/показа информационного блока
+        const toggleInfoBtn = document.getElementById('toggle-info-btn');
+        const infoContent = document.getElementById('info-content');
+        if (toggleInfoBtn && infoContent) {
+            toggleInfoBtn.addEventListener('click', function () {
+                const isHidden = infoContent.classList.toggle('hidden');
+                toggleInfoBtn.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+        }
+    });
+
+    function downloadAiTask(taskId) {
+        window.location.href = `/download-ai-task/${taskId}?format=txt`;
+    }
+
+    function deleteAiTask(taskId, event) {
+        event.stopPropagation();
+
+        const confirmButton = document.createElement('button');
+        confirmButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded ml-2 toast-confirm-btn';
+        confirmButton.textContent = 'Да';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-1 toast-cancel-btn';
+        cancelButton.textContent = 'Отмена';
+
+        const notification = Toastify({
+            node: (() => {
+                const div = document.createElement('div');
+                div.innerHTML = "Вы уверены, что хотите удалить эту задачу? Это действие необратимо. ";
+                div.appendChild(confirmButton);
+                div.appendChild(cancelButton);
+                return div;
+            })(),
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#EF4444"
+            },
+            stopOnFocus: false,
+            escapeMarkup: false,
+            offset: { x: 0, y: 0 }
+        }).showToast();
+
+        setTimeout(() => {
+            const toastElement = document.querySelector('.toastify');
+            if (toastElement) {
+                const confirmBtn = toastElement.querySelector('.toast-confirm-btn');
+                const cancelBtn = toastElement.querySelector('.toast-cancel-btn');
+
+                if (confirmBtn) {
+                    confirmBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        fetch(`/delete-ai-task/${taskId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    document.getElementById(`task-${taskId}`).remove();
+                                    Toastify({
+                                        text: data.message || "Задача успешно удалена",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#4CAF50"
+                                        },
+                                    }).showToast();
+                                } else {
+                                    Toastify({
+                                        text: data.message || "Не удалось удалить задачу",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#EF4444"
+                                        },
+                                    }).showToast();
+                                }
+                            })
+                            .catch(error => {
+                                Toastify({
+                                    text: "Произошла ошибка при отправке запроса.",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    style: {
+                                        background: "#EF4444"
+                                    },
+                                }).showToast();
+                            });
+                        notification.hideToast();
+                    };
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        notification.hideToast();
+                    };
+                }
+            }
+        }, 100);
+    }
+</script>
+
+{% if results %}
+<script id="initial-data" type="application/json">
+    {{ results|tojson }}
+</script>
+{% endif %}
+
+<script type="module" src="{{ url_for('static', filename='js/text_tor/loader.js') }}"></script>
+<script src="{{ url_for('static', filename='js/text_tor/editor.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/text_tor/calculator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/text_tor/keyphrases.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/text_tor/headings_generator.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/text_tor/lsi_generator.js') }}"></script>
+<script src="{{ url_for('static', filename='js/text_tor/clipboard.js') }}"></script>
+{% endblock %}

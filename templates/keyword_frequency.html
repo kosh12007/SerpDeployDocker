@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}Частотность ключевых слов{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Проверка частотности ключевых слов</h1>
+
+    <form method="POST" class="mb-8 bg-white p-6 rounded-lg shadow-md">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="mb-4">
+            <label for="keyword" class="block text-gray-700 text-sm font-medium mb-2">Введите ключевую фразу:</label>
+            <input type="text" id="keyword" name="keyword" value="{{ result.keyword or '' }}" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+            Получить частотность
+        </button>
+    </form>
+
+    {% if result %}
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Результаты для: "{{ result.keyword }}"</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="border-l-4 border-blue-500 pl-4 py-2">
+                <h3 class="text-lg font-medium text-gray-900">Яндекс - Базовая частотность</h3>
+                <p class="mt-1 text-sm text-gray-500">Запрос без кавычек, например "купить слона"</p>
+                <p class="mt-2 text-2xl font-bold text-blue-600">{{ result.yandex_basic or 'N/A' }}</p>
+            </div>
+
+            <div class="border-l-4 border-green-500 pl-4 py-2">
+                <h3 class="text-lg font-medium text-gray-900">Яндекс - Фразовая частотность</h3>
+                <p class="mt-1 text-sm text-gray-500">Запрос в кавычках, например "купить слона"</p>
+                <p class="mt-2 text-2xl font-bold text-green-600">{{ result.yandex_phrase or 'N/A' }}</p>
+            </div>
+
+            <div class="border-l-4 border-purple-500 pl-4 py-2">
+                <h3 class="text-lg font-medium text-gray-900">Яндекс - Точная частотность</h3>
+                <p class="mt-1 text-sm text-gray-500">Запрос с восклицательным знаком, например "!купить !слона"</p>
+                <p class="mt-2 text-2xl font-bold text-purple-600">{{ result.yandex_exact or 'N/A' }}</p>
+            </div>
+
+            <div class="border-l-4 border-yellow-500 pl-4 py-2">
+                <h3 class="text-lg font-medium text-gray-900">Google - Базовая частотность</h3>
+                <p class="mt-1 text-sm text-gray-500">Информация недоступна через XMLRiver API</p>
+                <p class="mt-2 text-2xl font-bold text-yellow-600">{{ result.google_basic or 'N/A' }}</p>
+            </div>
+
+            <div class="border-l-4 border-orange-500 pl-4 py-2 md:col-span-2">
+                <h3 class="text-lg font-medium text-gray-900">Google - Уточненная частотность</h3>
+                <p class="mt-1 text-sm text-gray-500">Информация недоступна через XMLRiver API</p>
+                <p class="mt-2 text-2xl font-bold text-orange-600">{{ result.google_refined or 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{
+  "name": "serp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npm run build:main && npm run build:theme-light && npm run build:theme-dark",
+    "build:main": "tailwindcss -i ./static/css/input-main.css -o ./static/css/main.css --minify",
+    "build:theme-light": "tailwindcss -i ./static/css/input-theme-light.css -o ./static/css/theme-light.css --minify",
+    "build:theme-dark": "tailwindcss -i ./static/css/input-theme-dark.css -o ./static/css/theme-dark.css --minify",
+    "watch": "npm run watch:main",
+    "watch:main": "tailwindcss -i ./static/css/input-main.css -o ./static/css/main.css --watch",
+    "watch:theme-light": "tailwindcss -i ./static/css/input-theme-light.css -o ./static/css/theme-light.css --watch",
+    "watch:theme-dark": "tailwindcss -i ./static/css/input-theme-dark.css -o ./static/css/theme-dark.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.27",
+    "tailwindcss": "^3.3.3"
+  },
+  "dependencies": {
+    "flatpickr": "^4.6.13"
+  }
+}

@@ -1,0 +1,13 @@
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+
+ <!-- Большой график -->
+ <!-- Крупная лупа справа -->
+ <!-- Ручка лупы, начинается выше середины окружности -->
+ <g>
+  <title>Layer 1</title>
+  <rect x="0" y="0" id="svg_1" fill="#4f46e5" rx="10" height="64" width="64"/>
+  <polyline stroke="white" id="svg_2" stroke-linecap="round" fill="none" stroke-width="4" points="6.857144355773926,37.7142839262944 19.000001907348633,16.1904726027455 31.142858505249023,26.952379201608608 43.28571319580078,5.428567409515381 55.42856979370117,19.77777167873768 "/>
+  <circle transform="rotate(16.294 45.1429 43.7143)" stroke-dasharray="5,2,2,2,2,2" stroke="white" id="svg_3" fill="none" stroke-width="4" r="14.57143" cy="43.71429" cx="45.14286"/>
+  <line transform="rotate(16.7673 16.5 50.7857)" stroke="white" id="svg_4" stroke-linecap="round" stroke-width="4" y2="55.96093" x2="7.08407" y1="45.61049" x1="25.91592"/>
+ </g>
+</svg>

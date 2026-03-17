@@ -1,0 +1,119 @@
+# ===============================================================
+# Docker Compose — PROD-окружение (seoorbita.ru)
+# Запуск: docker compose -f docker-compose.prod.yml up -d --build
+# Доступ: https://seoorbita.ru
+#
+# ВАЖНО: Перед первым запуском необходимо получить SSL:
+# См. раздел "Получение SSL-сертификата" в README.md
+# ===============================================================
+
+services:
+
+  # ============================================================
+  # Сервис базы данных MySQL 8
+  # ============================================================
+  db:
+    image: mysql:8.0
+    container_name: serp_db_prod
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data_prod:/var/lib/mysql
+    networks:
+      - serp_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Сервис Flask-приложения (gunicorn)
+  # ============================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: serp_web_prod
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      # В prod режим hosting
+      MODE: hosting
+    volumes:
+      - ./logs:/app/logs
+      - ./static:/app/static:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - serp_network
+    expose:
+      - "8000"
+
+  # ============================================================
+  # Сервис Nginx — HTTP + HTTPS + Certbot
+  # ============================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: serp_nginx_prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Prod-конфигурация с SSL
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      # Статика
+      - ./static:/app/static:ro
+      # SSL-сертификаты от Let's Encrypt
+      - ./certbot/conf:/etc/letsencrypt:ro
+      # Директория для верификации Certbot
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - web
+    networks:
+      - serp_network
+
+  # ============================================================
+  # Certbot — автоматическое получение и обновление SSL
+  # ============================================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: serp_certbot
+    volumes:
+      # Сертификаты сохраняются в certbot/conf/
+      - ./certbot/conf:/etc/letsencrypt
+      # Токены для верификации домена
+      - ./certbot/www:/var/www/certbot
+    # Проверяем и обновляем сертификат при старте
+    # --quiet подавляет вывод, если обновление не нужно
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do
+        certbot renew --quiet --webroot -w /var/www/certbot;
+        sleep 12h & wait $${!};
+      done"
+    networks:
+      - serp_network
+
+# ============================================================
+# Сети
+# ============================================================
+networks:
+  serp_network:
+    driver: bridge
+
+# ============================================================
+# Volumes (персистентные данные)
+# ============================================================
+volumes:
+  mysql_data_prod:
+    driver: local

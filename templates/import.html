@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}Импорт локаций{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Импорт локаций из CSV</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="mb-4">
+  {% for category, message in messages %}
+  <div class="p-4 rounded-md 
+          {% if category == 'success' %} bg-green-100 border-green-400 text-green-700 
+          {% elif category == 'danger' %} bg-red-100 border-red-400 text-red-700 
+          {% else %} bg-blue-100 border-blue-400 text-blue-700 
+          {% endif %}" role="alert">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+  <p class="text-gray-700 dark:text-gray-300 mb-4">
+    Нажмите кнопку ниже, чтобы запустить процесс импорта локаций из файла `geo (1).csv`.
+    Этот процесс очистит существующую таблицу `locations` и заполнит ее новыми данными.
+    Это может занять некоторое время.
+  </p>
+  <form action="{{ url_for('main.run_import_locations') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+      Запустить импорт
+    </button>
+  </form>
+</div>
+{% endblock %}

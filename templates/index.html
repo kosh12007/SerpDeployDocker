@@ -1,0 +1,148 @@
+{% extends "home.html" %}
+
+{% block title %}SEO орбита - Анализ поисковой выдачи и аудит сайтов{% endblock %}
+{% block meta_description %}Сервис SEO орбита предоставляет инструменты для быстрой проверки позиций, анализа
+конкурентов, кластеризации запросов и генерации контента при помощи AI.{% endblock %}
+{% block meta_keywords %}SEO инструменты, анализ SERP, проверка позиций, аудит сайта, кластеризация запросов, AI
+копирайтинг{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    {% if current_user.is_authenticated %}
+    {% include "dashboard/index.html" %}
+    {% else %}
+    <header class="text-center mb-16">
+        <h1 class="text-5xl font-extrabold text-gray-800 dark:text-white">Инструменты</h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400 mt-4">Все, что нужно для SEO-анализа и автоматизации</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        {# ... существующий список инструментов ... #}
+        {% set tools = [
+        {
+        "title": "Проекты",
+        "description": "Создание проекта, добавление ключевых фраз, парсинг позиций и аналитика их изменений.",
+        "url": url_for('project_routes.project_list'),
+        "icon": "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+        },
+        {
+        "title": "Быстрая проверка позиций",
+        "description": "Без создания проекта, запускает процесс парсинга позиций для отслеживания рейтинга сайта в
+        поисковой выдаче.",
+        "url": url_for('main.quick_check'),
+        "icon": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        },
+        {
+        "title": "История проверок",
+        "description": "Просмотр истории всех сессий парсинга, скачивание и удаление результатов.",
+        "url": url_for('main.show_results'),
+        "icon": "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+        },
+        {
+        "title": "Выгрузка ТОП-10",
+        "description": "Парсинг ТОП-10 сайтов по заданным запросам для анализа конкурентов, с подсветкой пересечений.",
+        "url": url_for('top_sites.top_sites_page'),
+        "icon": "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"
+        },
+        {
+        "title": "Проверка уникальности",
+        "description": "Проверка текста на плагиат и поиск заимствований в поисковой сети.",
+        "url": url_for('uniqueness.uniqueness_page'),
+        "icon": "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2
+        2 0 012-2h2a2 2 0 012-2"
+        },
+        {
+        "title": "Кластеризация запросов",
+        "description": "Интеллектуальная группировка ключевых фраз на основе схожести поисковой выдачи
+        (Hard-кластеризация).",
+        "url": url_for('clustering_bp.clustering_page'),
+        "icon": "M4 6h16M4 10h16M4 14h16M4 18h16"
+        },
+        {
+        "title": "Анализатор страниц",
+        "description": "Анализ нескольких страниц для получения подробных отчетов (Title, Description, Объём текста,
+        Теги H1-H6, LSI-слова) все данные в одном отчёте.",
+        "url": url_for('page_analyzer.page_analyzer'),
+        "icon": "M10 21h7a2 2 0 002-2V5a2 2 0 00-2-2h-7a2 2 0 00-2 2v14a2 2 0 002 2zM10 21h-4a2 2 0 01-2-2V5a2 2 0
+        012-2h4"
+        },
+        {
+        "title": "Создать ТЗ на Текст",
+        "description": "Генерация технических заданий для копирайтеров на основе анализа конкурентов.",
+        "url": url_for('text_tor.create_text_tor_page'),
+        "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0
+        01.293.707V19a2 2 0 01-2 2z"
+        },
+        {
+        "title": "Проверка редиректов на главное зеркало сайта",
+        "description": "Массовая проверка кодов ответов и цепочек редиректов для списка URL.",
+        "url": url_for('redirect_checker.check_redirects_page'),
+        "icon": "M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+        },
+        {
+        "title": "AI Ассистент",
+        "description": "Взаимодействие с AI для решения различных задач и генерации идей.",
+        "url": url_for('ai.ai_page'),
+        "icon": "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002
+        2z"
+        },
+        {
+        "title": "Генератор статей",
+        "description": "Автоматическое создание уникальных статей на основе ключевых слов и тематики.",
+        "url": url_for('ai.article_generator_page'),
+        "icon": "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828
+        15H9v-2.828l8.586-8.586z"
+        },
+        {
+        "title": "Проверка HTTP-статусов",
+        "description": "Массовая проверка кодов ответов сервера и цепочек редиректов для списка URL.",
+        "url": url_for('http_status_checker.http_status_checker_page'),
+        "icon": "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+        },
+        {
+        "title": "Частотность запросов",
+        "description": "Получение актуальных данных о частотности ключевых слов из Яндекс.Wordstat прямо в интерфейсе.",
+        "url": url_for('main.keyword_frequency'),
+        "icon": "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+        },
+        {
+        "title": "Текстовый анализатор",
+        "description": "Глубокий анализ текста: LSI-слова, n-граммы, плотность, классическая и академическая тошнота.",
+        "url": url_for('text_analyzer.text_analyzer'),
+        "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0
+        01.293.707V19a2 2 0 01-2 2z"
+        },
+        ] %}
+
+        {% for tool in tools %}
+        <div class="tool-card">
+            <div class="tool-card-content">
+                <div class="tool-card-header">
+                    <div class="tool-card-icon">
+                        <svg fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="{{ tool.icon }}"></path>
+                        </svg>
+                    </div>
+                    <h2 class="tool-card-title">{{ tool.title }}</h2>
+                </div>
+                <p class="tool-card-description">{{ tool.description }}</p>
+                <a href="{{ tool.url }}" class="tool-card-button">Перейти</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if current_user.is_authenticated %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/flatpickr.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<script src="{{ url_for('static', filename='js/vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/flatpickr.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/ru.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endif %}
+{% endblock %}

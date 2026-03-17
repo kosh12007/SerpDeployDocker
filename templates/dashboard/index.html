@@ -1,0 +1,197 @@
+{% from 'dashboard/widgets.html' import stat_card, activity_item %}
+
+<div class="dashboard-container space-y-8 animate-fade-in">
+    <!-- Приветствие -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Панель управления</h1>
+            <!-- <p class="text-gray-500 dark:text-gray-400">Добро пожаловать {{ current_user.username }}! Вот что
+                происходит с вашими проектами сегодня.</p> -->
+        </div>
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('project_routes.create_project') }}"
+                class="btn-volumetric px-6 py-2.5 rounded-xl font-semibold flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Новый проект</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Основные показатели -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {{ stat_card('Мои проекты', stats.total_projects, 'M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2
+        2 0 00-2 2z', 'blue') }}
+        {{ stat_card('Всего запросов', stats.total_queries, 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 'indigo',
+        description='из них ' ~ stats.unassigned_queries ~ ' без групп') }}
+        {{ stat_card('Лимиты', current_user.limits, 'M13 10V3L4 14h7v7l9-11h-7z', 'amber') }}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 rounded-xl bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                    </svg>
+                </div>
+                <button id="refresh-dashboard-balance" class="text-xs text-blue-600 hover:underline">Обновить</button>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Баланс XmlRiver</h3>
+            {% if current_user.is_admin %}
+            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="dashboard-balance">Загрузка...</p>
+            {% else %}У вас нет прав на получение данных{% endif %}
+        </div>
+    </div>
+
+    <!-- Графики и Распределение -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Распределение по ТОПам -->
+        <div
+            class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-6 gap-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Распределение запросов по ТОПам</h3>
+                <div class="flex flex-col md:flex-row md:flex-wrap xl:flex-nowrap items-center gap-3 w-full xl:w-auto">
+                    <!-- Селект проекта -->
+                    <div class="relative w-full md:w-[calc(50%-6px)] xl:w-auto min-w-[200px]">
+                        <select id="dashboard-project-selector"
+                            class="w-full pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white appearance-none bg-transparent font-medium">
+                            <option value="all">Все проекты</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Селект варианта парсинга -->
+                    <div class="relative w-full md:w-[calc(50%-6px)] xl:w-auto min-w-[200px]">
+                        <select id="dashboard-variant-selector"
+                            class="w-full pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-xl dark:bg-gray-800 dark:border-gray-700 dark:text-white disabled:opacity-50 appearance-none bg-transparent"
+                            disabled>
+                            <option value="">Вариант парсинга</option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <!-- Блок с датами -->
+                    <div
+                        class="flex items-center gap-2 w-full md:w-full xl:w-auto justify-start md:justify-start xl:justify-start">
+                        <!-- Кнопка выбора даты 1 -->
+                        <button id="dashboard-date-btn-1"
+                            class="px-3 py-1.5 text-sm border border-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-700 dark:text-white disabled:opacity-50 flex items-center space-x-2"
+                            disabled title="Базовая дата (с чем сравниваем)">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span id="dashboard-date-text-1" class="font-medium">Дата 1</span>
+                        </button>
+                        <span class="text-gray-400 dark:text-gray-500 text-sm">vs</span>
+                        <!-- Кнопка выбора даты 2 -->
+                        <button id="dashboard-date-btn-2"
+                            class="px-3 py-1.5 text-sm border border-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 dark:border-gray-700 dark:text-white disabled:opacity-50 flex items-center space-x-2"
+                            disabled title="Целевая дата (что сравниваем)">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span id="dashboard-date-text-2" class="font-medium">Дата 2</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="topDistributionChart"></canvas>
+            </div>
+            <div class="grid grid-cols-5 gap-2 mt-6 text-center">
+                <!-- ТОП-1 -->
+                <div class="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                    <p class="text-[10px] text-blue-600 font-bold">ТОП-1</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white" id="top-1-value">{{ stats.top_1 }}</p>
+                    <div id="top-1-diff" class="text-xs hidden">
+                        <span class="diff-arrow"></span><span class="diff-value"></span>
+                    </div>
+                </div>
+                <!-- ТОП-3 -->
+                <div class="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20">
+                    <p class="text-[10px] text-indigo-600 font-bold">ТОП-3</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white" id="top-3-value">{{ stats.top_3 }}</p>
+                    <div id="top-3-diff" class="text-xs hidden">
+                        <span class="diff-arrow"></span><span class="diff-value"></span>
+                    </div>
+                </div>
+                <!-- ТОП-10 -->
+                <div class="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                    <p class="text-[10px] text-purple-600 font-bold">ТОП-10</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white" id="top-10-value">{{ stats.top_10 }}</p>
+                    <div id="top-10-diff" class="text-xs hidden">
+                        <span class="diff-arrow"></span><span class="diff-value"></span>
+                    </div>
+                </div>
+                <!-- ТОП-30 -->
+                <div class="p-2 rounded-lg bg-pink-50 dark:bg-pink-900/20">
+                    <p class="text-[10px] text-pink-600 font-bold">ТОП-30</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white" id="top-30-value">{{ stats.top_30 }}</p>
+                    <div id="top-30-diff" class="text-xs hidden">
+                        <span class="diff-arrow"></span><span class="diff-value"></span>
+                    </div>
+                </div>
+                <!-- ТОП-100 -->
+                <div class="p-2 rounded-lg bg-rose-50 dark:bg-rose-900/20">
+                    <p class="text-[10px] text-rose-600 font-bold">ТОП-100</p>
+                    <p class="text-lg font-bold text-gray-900 dark:text-white" id="top-100-value">{{ stats.top_100 }}
+                    </p>
+                    <div id="top-100-diff" class="text-xs hidden">
+                        <span class="diff-arrow"></span><span class="diff-value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Последняя активность -->
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700 h-full">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Активность</h3>
+                <span class="text-xs text-gray-400">Последние 5</span>
+            </div>
+            <div class="space-y-2" id="recentActivityList">
+                {% for item in activity %}
+                {{ activity_item(item.type, item.target, item.status, item.created_at) }}
+                {% else %}
+                <p class="text-center text-gray-500 py-8">Активности пока нет</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Аналитика Уникальности (Admin Only) -->
+    {% include 'dashboard/uniqueness_analytics.html' %}
+
+    <style>
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>

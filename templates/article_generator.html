@@ -1,0 +1,609 @@
+{% extends "layout.html" %}
+
+{% block title %}Генератор уникальных статей - SEO орбита{% endblock %}
+{% block meta_description %}Автоматическое создание качественных и уникальных статей на основе ключевых слов. Идеально
+для блогов и интернет-магазинов.{% endblock %}
+{% block meta_keywords %}генератор статей, AI копирайтинг, создание контента, уникальные тексты{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Генератор статей</h1>
+
+<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
+    <form id="article-generator-form" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div>
+            <label for="system_prompt" class="block mb-2">Системный промпт (отправляется первым поготавливает нейросеть
+                к обработке пользовательского промпта):</label>
+            <textarea name="system_prompt" id="system_prompt" rows="4"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">Напиши текст.
+В тексте обязательно используй нумерованные и маркированные списки.
+В следующем сообщении будет немного информации о нем, на 100% следуй этой информации.
+Результат выдай в текстовом форматировании</textarea>
+        </div>
+
+        <!-- Тип текста -->
+        <div>
+            <label class="block mb-2">Тип текста (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="type" value="пост" class="mr-2">
+                        пост</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="type" value="статья" class="mr-2">
+                        статья</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="type" value="описание товара"
+                            class="mr-2"> описание товара</label></div>
+            </div>
+        </div>
+
+        <!-- Платформа -->
+        <div class="flex gap-2">
+            <!-- Платформа -->
+            <div class="w-1/2">
+                <label for="platform" class="block mb-2">Платформа:</label>
+                <select name="platform" id="platform"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <option value="сайт">сайт</option>
+                    <option value="лендинг">лендинг</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="блог">блог</option>
+                    <option value="интернет-магазин">интернет-магазин</option>
+                    <option value="YouTube">YouTube</option>
+                    <option value="Telegram">Telegram</option>
+                </select>
+            </div>
+            <!-- Пол аудитории -->
+            <div class="w-1/2">
+                <label for="audience_gender" class="block mb-2">Пол аудитории:</label>
+                <select name="audience_gender" id="audience_gender"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <option value="все">все</option>
+                    <option value="женщины">женщины</option>
+                    <option value="мужчины">мужчины</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Цель -->
+        <div>
+            <label class="block mb-2">Цель (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="информировать"
+                            class="mr-2"> информировать</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="повысить продажи"
+                            class="mr-2"> повысить продажи</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="увеличить трафик"
+                            class="mr-2"> увеличить трафик</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="собрать подписки"
+                            class="mr-2"> собрать подписки</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal"
+                            value="улучшить позиции в поиске" class="mr-2"> улучшить позиции в поиске</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="развлечь аудиторию"
+                            class="mr-2"> развлечь аудиторию</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="goal" value="создать имидж эксперта"
+                            class="mr-2"> создать имидж эксперта</label></div>
+            </div>
+        </div>
+
+        <!-- Возраст аудитории -->
+        <div>
+            <label class="block mb-2">Возраст аудитории (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="audience_age" value="18-25"
+                            class="mr-2"> 18-25</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_age" value="25-35"
+                            class="mr-2"> 25-35</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_age" value="35-45"
+                            class="mr-2"> 35-45</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_age" value="45+"
+                            class="mr-2"> 45+</label></div>
+            </div>
+        </div>
+
+        <!-- Интересы аудитории -->
+        <div>
+            <label class="block mb-2">Интересы аудитории (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="audience_interests"
+                            value="ищут выгодные предложения" class="mr-2"> ищут выгодные предложения</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_interests"
+                            value="ценят качество" class="mr-2"> ценят качество</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_interests"
+                            value="интересуются новинками" class="mr-2"> интересуются новинками</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="audience_interests"
+                            value="сталкиваются с проблемой Х" class="mr-2"> сталкиваются с проблемой Х</label></div>
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <!-- Структура Заголовков -->
+            <div class="w-1/3">
+                <label for="header_structure" class="block mb-2">Структура Заголовков H1-H6:</label>
+                <!-- <input type="text" name="header_structure" id="header_structure"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                 -->
+                <textarea name="header_structure" id="header_structure" rows="4"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"></textarea>
+            </div>
+            <!-- Ключевые слова -->
+            <div class="w-1/3">
+                <label for="keywords_primary" class="block mb-2">Основные ключевые слова [3-5 запросов]:</label>
+                <!-- <input type="text" name="keywords_primary" id="keywords_primary"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                 -->
+                <textarea name="keywords_primary" id="keywords_primary" rows="4"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"></textarea>
+            </div>
+            <div class="w-1/3">
+                <label for="keywords_lsi" class="block mb-2">Дополнительные ключевые слова [LSI-слова]:</label>
+                <!-- <input type="text" name="keywords_lsi" id="keywords_lsi"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                 -->
+                <textarea name="keywords_lsi" id="keywords_lsi" rows="4"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"></textarea>
+            </div>
+
+        </div>
+        <!-- Структура -->
+        <div>
+            <label class="block mb-2">Структура (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="заголовок H1"
+                            class="mr-2"> заголовок H1</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="подзаголовки H2-H4"
+                            class="mr-2"> подзаголовки H2-H4</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure"
+                            value="маркированные списки" class="mr-2"> маркированные списки</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="таблицы сравнения"
+                            class="mr-2"> таблицы сравнения</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="FAQ-блок"
+                            id="structure-faq" class="mr-2"> FAQ-блок</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="CTA-кнопка"
+                            class="mr-2"> CTA-кнопка</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure" value="отзывы"
+                            id="structure-reviews" class="mr-2"> отзывы</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="structure"
+                            value="примеры использования" class="mr-2"> примеры использования</label></div>
+            </div>
+        </div>
+
+        <!-- Поле для количества отзывов (скрыто по умолчанию) -->
+        <div id="reviews-count-container" class="hidden">
+            <label for="reviews_count" class="block mb-2">Количество отзывов:</label>
+            <input type="number" name="reviews_count" id="reviews_count" min="1" value="3"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+        </div>
+
+        <!-- Поле для количества вопросов FAQ (скрыто по умолчанию) -->
+        <div id="faq-count-container" class="hidden">
+            <label for="faq_count" class="block mb-2">Количество вопросов в FAQ:</label>
+            <input type="number" name="faq_count" id="faq_count" min="1" value="3"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+        </div>
+
+        <!-- Эмоции -->
+        <div>
+            <label class="block mb-2">Эмоции (можно выбрать несколько):</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="emotions"
+                            value="страх упустить выгоду" class="mr-2"> страх упустить выгоду</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="emotions"
+                            value="радость от решения проблемы" class="mr-2"> радость от решения проблемы</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="emotions" value="доверие к бренду"
+                            class="mr-2"> доверие к бренду</label></div>
+            </div>
+        </div>
+
+        <!-- Объем -->
+        <div>
+            <label for="length" class="block mb-2">Объем текста:</label>
+            <!-- <select name="length" id="length"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                <option value="короткий до 1000 символов">короткий до 1000 символов</option>
+                <option value="средний 1500-3000">средний 1500-3000</option>
+                <option value="длинный 5000+">длинный 5000+</option>
+            </select> -->
+            <input type="text" name="length" id="length"
+                class="w-1/6 p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+        </div>
+
+        <!-- Уникальность -->
+        <div>
+            <label for="uniqueness" class="block mb-2">Уникальность:</label>
+            <select name="uniqueness" id="uniqueness"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                <option value="95%">95%</option>
+                <option value="100%">100%</option>
+            </select>
+        </div>
+
+        <!-- Дополнительно -->
+        <div>
+            <label class="block mb-2">Дополнительно (можно выбрать несколько):</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="seo" value="мета-теги" class="mr-2">
+                        мета-теги</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="seo" value="эмоджи" class="mr-2">
+                        эмоджи</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="seo" value="хештеги" class="mr-2">
+                        хештеги</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="seo" value="внутренние ссылки"
+                            class="mr-2"> внутренние ссылки</label></div>
+            </div>
+        </div>
+
+        <!-- Избегать -->
+        <div>
+            <label class="block mb-2">Избегать (можно выбрать несколько):</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="restrictions" value="жаргонизмов"
+                            class="mr-2"> жаргонизмов</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="restrictions"
+                            value="сложных терминов" class="mr-2"> сложных терминов</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="restrictions"
+                            value="упоминания конкурентов" class="mr-2"> упоминания конкурентов</label></div>
+            </div>
+        </div>
+
+        <!-- Упомянуть -->
+        <div>
+            <label class="block mb-2">Упомянуть (можно выбрать несколько):</label>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div><label class="flex items-center"><input type="checkbox" name="branding" value="акции" class="mr-2">
+                        акции</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="branding" value="гарантии"
+                            class="mr-2"> гарантии</label></div>
+                <div><label class="flex items-center"><input type="checkbox" name="branding"
+                            value="уникальные преимущества бренда" class="mr-2"> уникальные преимущества бренда</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Пример для вдохновения -->
+        <div>
+            <label for="inspiration_example" class="block mb-2">Пример для вдохновения [ссылка или описание]:</label>
+            <!-- <input type="text" name="inspiration_example" id="inspiration_example"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+             -->
+            <textarea name="inspiration_example" id="inspiration_example" rows="4"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"></textarea>
+        </div>
+
+        <!-- Скрытое поле для user_message -->
+        <input type="hidden" name="user_message" id="user_message">
+
+        <button type="submit" id="ai-submit-btn"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Сгенерировать статью</button>
+    </form>
+</div>
+
+
+<div class="container mx-auto">
+    <h2 class="text-3xl font-bold mb-6">Задачи AI</h2>
+    <div id="task-accordion">
+        {% for task in tasks %}
+        <div id="task-{{ task.id }}" class="task-accordion">
+            <div class="task-header">
+                <div class="flex-grow">
+                    <span class="font-bold text-sm">Задача #{{ task.id }}</span> -
+                    <span class="text-sm">{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="session-status
+                                     {% if task.status == 'completed' %}bg-green-200 text-green-800
+                                     {% elif task.status == 'running' %}bg-blue-200 text-blue-800
+                                     {% elif task.status == 'pending' %}bg-yellow-200 text-yellow-800
+                                     {% else %}bg-red-200 text-red-800{% endif %}">
+                        {% if task.status == 'completed' %}Выполнено
+                        {% elif task.status == 'running' %}В работе
+                        {% elif task.status == 'pending' %}В очереди
+                        {% else %}Ошибка{% endif %}
+                    </span>
+                </div>
+                <div class="task-actions">
+                    <button class="action-btn no-underline" onclick="downloadArticleTask('{{ task.id }}')">TXT</button>
+                    <!-- <button class="action-btn-delete no-underline"
+                        onclick="deleteAiTask('{{ task.id }}', event)">Удалить</button> -->
+                    <button class="toggle-btn button-open">Раскрыть</button>
+                    <button class="delete-btn" onclick="deleteAiTask('{{ task.id }}', event)">
+                        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                            class="inline-block">
+                            <g>
+                                <rect x="0" y="0" width="100" height="100" rx="15" ry="15" fill="#D80027" />
+                                <path d="M 20,20 L 80,80 M 80,20 L 20,80" stroke="white" stroke-width="12"
+                                    stroke-linecap="round" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="task-content hidden">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <!-- <h4 class="font-semibold mb-2">Системный промпт:</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ task.system_prompt }}</p>
+                    <hr class="my-4 dark:border-gray-600"> -->
+
+                    {% if task.results %}
+                    {% for result in task.results %}
+                    <div class="mb-4">
+                        <h5 class="font-semibold">Запрос:</h5>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded">{{
+                            result.user_message }}</p>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold">Ответ AI:</h5>
+                        <p
+                            class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded whitespace-pre-wrap">
+                            {{ result.ai_response }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-sm text-gray-500">Для этой задачи еще нет результатов. Статус: {{ task.status }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>Задачи для AI еще не создавались.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const accordion = document.getElementById('task-accordion');
+        if (accordion) {
+            accordion.addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('toggle-btn')) {
+                    const header = e.target.closest('.task-header');
+                    const content = header.nextElementSibling;
+                    content.classList.toggle('hidden');
+                    e.target.textContent = content.classList.contains('hidden') ? 'Раскрыть' : 'Скрыть';
+                }
+            });
+        }
+
+        const form = document.getElementById('article-generator-form');
+        const structureReviews = document.getElementById('structure-reviews');
+        const structureFaq = document.getElementById('structure-faq');
+        const reviewsCountContainer = document.getElementById('reviews-count-container');
+        const faqCountContainer = document.getElementById('faq-count-container');
+
+        structureReviews.addEventListener('change', (e) => {
+            reviewsCountContainer.classList.toggle('hidden', !e.target.checked);
+        });
+
+        structureFaq.addEventListener('change', (e) => {
+            faqCountContainer.classList.toggle('hidden', !e.target.checked);
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            let prompt = "";
+
+            const type = formData.getAll('type');
+            if (type.length > 0) prompt += `Тип текста: ${type.join(', ')}\n`;
+
+            const platform = formData.get('platform');
+            if (platform) prompt += `Платформа: ${platform}\n`;
+
+            const goals = formData.getAll('goal');
+            if (goals.length > 0) prompt += `Цель: ${goals.join(', ')}\n`;
+
+            const audience_gender = formData.get('audience_gender');
+            if (audience_gender) prompt += `Пол аудитории: ${audience_gender}\n`;
+
+            const audience_age = formData.getAll('audience_age');
+            if (audience_age.length > 0) prompt += `Возраст аудитории: ${audience_age.join(', ')}\n`;
+
+            const audience_interests = formData.get('audience_interests');
+            if (audience_interests) prompt += `Интересы аудитории: ${audience_interests}\n`;
+
+            const keywords_primary = formData.get('keywords_primary');
+            if (keywords_primary) prompt += `Основные ключевые слова: ${keywords_primary}\n`;
+
+            const keywords_lsi = formData.get('keywords_lsi');
+            if (keywords_lsi) prompt += `Дополнительные ключевые слова: ${keywords_lsi}\n`;
+
+            const header_structure = formData.get('header_structure');
+            if (header_structure) prompt += `Структура заголовков: ${header_structure}\n`;
+
+            const structure = formData.getAll('structure');
+            if (structure.length > 0) {
+                let structureText = `Структура: ${structure.join(', ')}\n`;
+                if (structure.includes('отзывы')) {
+                    const reviewsCount = formData.get('reviews_count');
+                    if (reviewsCount) {
+                        structureText += `Добавь в текст ${reviewsCount} озывов\n`;
+                    }
+                }
+                if (structure.includes('FAQ-блок')) {
+                    const faqCount = formData.get('faq_count');
+                    if (faqCount) {
+                        structureText += `Добавь в текст ${faqCount} вопросов в FAQ:\n`;
+                    }
+                }
+                prompt += structureText;
+            }
+
+            const emotions = formData.getAll('emotions');
+            if (emotions.length > 0) prompt += `Эмоции: ${emotions.join(', ')}\n`;
+
+            const length = formData.get('length');
+            if (length) prompt += `Объем должен быть не меньше: ${length} это критичный параметр и имеет высший приоритет \n`;
+
+            const uniqueness = formData.get('uniqueness');
+            if (uniqueness) prompt += `Уникальность: ${uniqueness}\n`;
+
+            const seo = formData.getAll('seo');
+            if (seo.length > 0) prompt += `Дополнительно: ${seo.join(', ')}\n`;
+
+            const restrictions = formData.get('restrictions');
+            if (restrictions) prompt += `Избегать: ${restrictions}\n`;
+
+            const branding = formData.get('branding');
+            if (branding) prompt += `Упомянуть: ${branding}\n`;
+
+            const inspiration_example = formData.get('inspiration_example');
+            if (inspiration_example) prompt += `Пример для вдохновения: ${inspiration_example}\n`;
+
+            document.getElementById('user_message').value = prompt;
+
+            const system_prompt = document.getElementById('system_prompt').value;
+
+            const submitBtn = document.getElementById('ai-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Генерация...';
+            console.log("Промпт user", { prompt })
+
+            fetch("{{ url_for('ai.ask_ai') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    system_prompt: system_prompt,
+                    user_message: prompt
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Toastify({
+                            text: "Задача на генерацию статьи успешно создана.",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            backgroundColor: "#4CAF50",
+                        }).showToast();
+                        // Перезагрузка страницы, чтобы увидеть новую задачу
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        Toastify({
+                            text: data.message || "Не удалось создать задачу.",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            backgroundColor: "#EF4444",
+                        }).showToast();
+                    }
+                })
+                .catch(error => {
+                    Toastify({
+                        text: "Произошла ошибка при отправке запроса.",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "center",
+                        backgroundColor: "#EF4444",
+                    }).showToast();
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Сгенерировать статью';
+                });
+        });
+    });
+
+    function downloadArticleTask(taskId) {
+        window.location.href = `/download-article-task/${taskId}?format=txt`;
+    }
+
+    function deleteAiTask(taskId, event) {
+        event.stopPropagation();
+
+        const confirmButton = document.createElement('button');
+        confirmButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded ml-2 toast-confirm-btn';
+        confirmButton.textContent = 'Да';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-1 toast-cancel-btn';
+        cancelButton.textContent = 'Отмена';
+
+        const notification = Toastify({
+            node: (() => {
+                const div = document.createElement('div');
+                div.innerHTML = "Вы уверены, что хотите удалить эту задачу? Это действие необратимо. ";
+                div.appendChild(confirmButton);
+                div.appendChild(cancelButton);
+                return div;
+            })(),
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "#EF4444",
+            stopOnFocus: false,
+            escapeMarkup: false,
+            offset: { x: 0, y: 0 }
+        }).showToast();
+
+        setTimeout(() => {
+            const toastElement = document.querySelector('.toastify');
+            if (toastElement) {
+                const confirmBtn = toastElement.querySelector('.toast-confirm-btn');
+                const cancelBtn = toastElement.querySelector('.toast-cancel-btn');
+
+                if (confirmBtn) {
+                    confirmBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        fetch(`/delete-ai-task/${taskId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    document.getElementById(`task-${taskId}`).remove();
+                                    Toastify({
+                                        text: data.message || "Задача успешно удалена",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        backgroundColor: "#4CAF50",
+                                    }).showToast();
+                                } else {
+                                    Toastify({
+                                        text: data.message || "Не удалось удалить задачу",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        backgroundColor: "#EF4444",
+                                    }).showToast();
+                                }
+                            })
+                            .catch(error => {
+                                Toastify({
+                                    text: "Произошла ошибка при отправке запроса.",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    backgroundColor: "#EF4444",
+                                }).showToast();
+                            });
+                        notification.hideToast();
+                    };
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        notification.hideToast();
+                    };
+                }
+            }
+        }, 100);
+    }
+</script>
+<script src="{{ url_for('static', filename='js/article_generator/loader.js') }}"></script>
+{% endblock %}

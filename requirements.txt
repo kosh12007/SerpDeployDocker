@@ -1,0 +1,24 @@
+pandas
+requests
+xmltodict
+python-dotenv
+mysql-connector-python
+Flask
+Flask-Login
+Flask-Mail
+Werkzeug
+openpyxl
+
+pytest
+beautifulsoup4
+scikit-learn
+nltk
+
+openai
+Flask-Caching
+Flask-WTF
+WTForms
+pymorphy2
+
+# WSGI-сервер для продакшн-запуска в Docker
+gunicorn==21.2.0

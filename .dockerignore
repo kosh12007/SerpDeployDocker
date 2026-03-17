@@ -1,0 +1,75 @@
+# Исключения для Docker-образа
+# Эти файлы/папки НЕ копируются в контейнер
+
+# Секреты — никогда не копировать!
+.env
+
+# Python-кеш
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Виртуальное окружение
+venv/
+env/
+.venv/
+
+# Лог-файлы (будут создаваться внутри контейнера)
+*.log
+logs/
+
+# Node.js (CSS уже скомпилирован)
+node_modules/
+npm-debug.log*
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Тесты
+.pytest_cache/
+tests/
+test_*.py
+*_test.py
+
+# Бэкапы и большие SQL-файлы
+*.zip
+*.sql
+*.xlsx
+*.csv
+
+# Временные файлы
+*.tmp
+*.bak
+deploy_*.txt
+modified_files_today.txt
+plan.md
+
+# Docker-файлы Certbot (создаются при деплое)
+certbot/
+
+# Memory bank и конфиги агентов
+memory-bank/
+.agent/
+.agents/
+.gemini/
+.qwen/
+.kilocode/
+docs/
+
+# Migrations — если не нужны в контейнере
+# migrations/
+
+# Скрипты разработки
+scripts/
+compile_styles.bat
+install_dependencies.bat
+create_backup_serp.bat

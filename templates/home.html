@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Базовые СЕО теги -->
+    <title>{% block title %}SEO орбита - Анализ поисковой выдачи и аудит сайтов{% endblock %}</title>
+    <meta name="description"
+        content="{% block meta_description %}SEO орбита - профессиональный набор инструментов для анализа SERP, отслеживания позиций, кластеризации запросов и технического аудита сайтов.{% endblock %}">
+    <meta name="keywords"
+        content="{% block meta_keywords %}SEO, анализ позиций, парсинг SERP, кластеризация запросов, технический аудит, SEO инструменты{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.url }}{% endblock %}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta property="og:image" content="{{ url_for('static', filename='images/og-image.png', _external=True) }}">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ request.url }}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ self.title() }}{% endblock %}">
+    <meta name="twitter:description"
+        content="{% block twitter_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/og-image.png', _external=True) }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toastify.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+    <script>
+        function applyTheme() {
+            // Удаляем старый тег link, если он есть
+            const oldLink = document.getElementById('theme-style');
+            if (oldLink) {
+                oldLink.remove();
+            }
+
+            const link = document.createElement('link');
+            link.id = 'theme-style';
+            link.rel = 'stylesheet';
+
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                link.href = "{{ url_for('static', filename='css/theme-dark.css') }}";
+            } else {
+                document.documentElement.classList.remove('dark');
+                link.href = "{{ url_for('static', filename='css/theme-light.css') }}";
+            }
+            document.head.appendChild(link);
+        }
+
+        // Применяем тему при загрузке страницы
+        applyTheme();
+    </script>
+</head>
+
+<body class="bg-gray-100 text-gray-900 dark:bg-dark-background dark:text-dark-text">
+
+    <div class="min-h-screen flex flex-col">
+        <div class="sticky top-0 z-50">
+
+            {% include 'components/header.html' %}
+
+        </div>
+        <main class="container mx-auto px-4 py-8 flex-grow">
+            {% block content %}{% endblock %}
+        </main>
+
+        {% include 'components/footer.html' %}
+
+    </div>
+    <script>
+        const themeToggleButton = document.getElementById('theme-toggle');
+        if (themeToggleButton) {
+            themeToggleButton.addEventListener('click', function () {
+                const isDark = document.documentElement.classList.contains('dark');
+                if (isDark) {
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    localStorage.setItem('theme', 'dark');
+                }
+                applyTheme();
+            });
+        }
+    </script>
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/toastify.js') }}"></script>
+    <!-- <script type="text/javascript" src="{{ url_for('static', filename='js/custom-select.js') }}"></script> -->
+    <script>
+        {% with messages = get_flashed_messages(with_categories = true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        Toastify({
+            text: "{{ message }}",
+            duration: 1500,
+            close: true,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: "{% if category == 'success' %}#4CAF50{% elif category == 'danger' %}#EF4444{% else %}#2196F3{% endif %}"
+            },
+            stopOnFocus: true,
+        }).showToast();
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        // Функция для перенаправления на страницу проверки позиций проекта
+        function redirectToProjectPositions() {
+            try {
+                const selectedProjectId = localStorage.getItem('selectedProjectId');
+                if (selectedProjectId && selectedProjectId !== 'all') {
+                    // Перенаправляем на страницу проверки позиций с ID сохраненного проекта
+                    window.location.href = '/projects/' + selectedProjectId + '/positions';
+                } else {
+                    // Если нет сохраненного проекта или выбраны "Все проекты"
+                    if (selectedProjectId === 'all') {
+                        Toastify({
+                            text: "Выберите конкретный проект для просмотра позиций",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "right",
+                            style: {
+                                background: "#2196F3"
+                            },
+                        }).showToast();
+                    }
+                    // Перенаправляем на список проектов
+                    window.location.href = '/projects';
+                }
+            } catch (error) {
+                console.error('Ошибка при перенаправлении:', error);
+                // В случае ошибки также перенаправляем на список проектов
+                window.location.href = '/projects';
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

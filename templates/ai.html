@@ -1,0 +1,287 @@
+{% extends "layout.html" %}
+
+{% block title %}AI Ассистент для SEO - SEO орбита{% endblock %}
+{% block meta_description %}Используйте возможности искусственного интеллекта для решения SEO-задач, генерации идей и
+анализа данных.{% endblock %}
+{% block meta_keywords %}AI для SEO, нейросети, генерация идей, SEO ассистент{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">AI Ассистент</h1>
+
+<div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
+    <form id="ai-form" action="{{ url_for('ai.ask_ai') }}" method="POST" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div>
+            <label for="system_prompt" class="block mb-2">Системный промпт (отправляется первым поготавливает нейросеть
+                к обработке пользовательского промпта):</label>
+            <textarea name="system_prompt" id="system_prompt" rows="3" placeholder="Ты — полезный ассистент."
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">Ты — полезный ассистент.</textarea>
+        </div>
+        <div>
+            <label for="user_message" class="block mb-2">Ваше сообщение:</label>
+            <textarea name="user_message" id="user_message" rows="5"
+                placeholder="Сгенерируй 5 идей для статьи в блог на тему..."
+                class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+                required></textarea>
+        </div>
+        <button type="submit" id="ai-submit-btn"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Создать задачу</button>
+    </form>
+</div>
+
+
+<div class="container mx-auto">
+    <h2 class="text-3xl font-bold mb-6">Задачи AI</h2>
+    <div id="task-accordion">
+        {% for task in tasks %}
+        <div id="task-{{ task.id }}" class="task-accordion">
+            <div class="task-header">
+                <div class="flex-grow">
+                    <span class="font-bold text-sm">Задача #{{ task.id }}</span> -
+                    <span class="text-sm">{{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="session-status
+                                     {% if task.status == 'completed' %}bg-green-200 text-green-800
+                                     {% elif task.status == 'running' %}bg-blue-200 text-blue-800
+                                     {% elif task.status == 'pending' %}bg-yellow-200 text-yellow-800
+                                     {% else %}bg-red-200 text-red-800{% endif %}">
+                        {% if task.status == 'completed' %}Выполнено
+                        {% elif task.status == 'running' %}В работе
+                        {% elif task.status == 'pending' %}В очереди
+                        {% else %}Ошибка{% endif %}
+                    </span>
+                </div>
+                <div class="task-actions">
+                    <button class="action-btn no-underline" onclick="downloadAiTask('{{ task.id }}')">TXT</button>
+                    <!-- <button class="action-btn-delete no-underline"
+                        onclick="deleteAiTask('{{ task.id }}', event)">Удалить</button> -->
+                    <button class="toggle-btn button-open">Раскрыть</button>
+                    <button class="delete-btn" onclick="deleteAiTask('{{ task.id }}', event)">
+                        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                            class="inline-block">
+                            <g>
+                                <rect x="0" y="0" width="100" height="100" rx="15" ry="15" fill="#D80027" />
+                                <path d="M 20,20 L 80,80 M 80,20 L 20,80" stroke="white" stroke-width="12"
+                                    stroke-linecap="round" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="task-content hidden">
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+                    <!-- <h4 class="font-semibold mb-2">Системный промпт:</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">{{ task.system_prompt }}</p>
+                    <hr class="my-4 dark:border-gray-600"> -->
+
+                    {% if task.results %}
+                    {% for result in task.results %}
+                    <div class="mb-4">
+                        <h5 class="font-semibold">Запрос:</h5>
+                        <p class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded">{{
+                            result.user_message }}</p>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold">Ответ AI:</h5>
+                        <p
+                            class="text-sm text-gray-800 dark:text-gray-200 p-2 bg-gray-100 dark:bg-gray-700 rounded whitespace-pre-wrap">
+                            {{ result.ai_response }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-sm text-gray-500">Для этой задачи еще нет результатов. Статус: {{ task.status }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>Задачи для AI еще не создавались.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const accordion = document.getElementById('task-accordion');
+        if (accordion) {
+            accordion.addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('toggle-btn')) {
+                    const header = e.target.closest('.task-header');
+                    const content = header.nextElementSibling;
+                    content.classList.toggle('hidden');
+                    e.target.textContent = content.classList.contains('hidden') ? 'Раскрыть' : 'Скрыть';
+                }
+            });
+        }
+
+        const aiForm = document.getElementById('ai-form');
+        if (aiForm) {
+            aiForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const submitBtn = document.getElementById('ai-submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'В процессе...';
+
+                const formData = new FormData(aiForm);
+
+                fetch("{{ url_for('ai.ask_ai') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Toastify({
+                                text: data.message || "Задача успешно создана",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "#4CAF50"
+                                },
+                            }).showToast();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            Toastify({
+                                text: data.message || "Не удалось создать задачу",
+                                duration: 3000,
+                                close: true,
+                                gravity: "top",
+                                position: "center",
+                                style: {
+                                    background: "#EF4444"
+                                },
+                            }).showToast();
+                        }
+                    })
+                    .catch(error => {
+                        Toastify({
+                            text: "Произошла ошибка при отправке запроса.",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top",
+                            position: "center",
+                            style: {
+                                background: "#EF4444"
+                            },
+                        }).showToast();
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Создать задачу';
+                    });
+            });
+        }
+    });
+
+    function downloadAiTask(taskId) {
+        window.location.href = `/download-ai-task/${taskId}?format=txt`;
+    }
+
+    function deleteAiTask(taskId, event) {
+        event.stopPropagation();
+
+        const confirmButton = document.createElement('button');
+        confirmButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded ml-2 toast-confirm-btn';
+        confirmButton.textContent = 'Да';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-1 toast-cancel-btn';
+        cancelButton.textContent = 'Отмена';
+
+        const notification = Toastify({
+            node: (() => {
+                const div = document.createElement('div');
+                div.innerHTML = "Вы уверены, что хотите удалить эту задачу? Это действие необратимо. ";
+                div.appendChild(confirmButton);
+                div.appendChild(cancelButton);
+                return div;
+            })(),
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#EF4444"
+            },
+            stopOnFocus: false,
+            escapeMarkup: false,
+            offset: { x: 0, y: 0 }
+        }).showToast();
+
+        setTimeout(() => {
+            const toastElement = document.querySelector('.toastify');
+            if (toastElement) {
+                const confirmBtn = toastElement.querySelector('.toast-confirm-btn');
+                const cancelBtn = toastElement.querySelector('.toast-cancel-btn');
+
+                if (confirmBtn) {
+                    confirmBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        fetch(`/delete-ai-task/${taskId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    document.getElementById(`task-${taskId}`).remove();
+                                    Toastify({
+                                        text: data.message || "Задача успешно удалена",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#4CAF50"
+                                        },
+                                    }).showToast();
+                                } else {
+                                    Toastify({
+                                        text: data.message || "Не удалось удалить задачу",
+                                        duration: 3000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#EF4444"
+                                        },
+                                    }).showToast();
+                                }
+                            })
+                            .catch(error => {
+                                Toastify({
+                                    text: "Произошла ошибка при отправке запроса.",
+                                    duration: 3000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    style: {
+                                        background: "#EF4444"
+                                    },
+                                }).showToast();
+                            });
+                        notification.hideToast();
+                    };
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        notification.hideToast();
+                    };
+                }
+            }
+        }, 100);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}Мои проекты{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Мои проекты</h1>
+        <a href="{{ url_for('project_routes.create_project') }}"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Создать проект
+        </a>
+    </div>
+    <div class="bg-white shadow-md rounded my-6">
+        <table class="min-w-full table-auto">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th
+                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
+                        ID</th>
+                    <th
+                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
+                        Название</th>
+                    <th
+                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
+                        URL</th>
+                    <th
+                        class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
+                        Действия</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+                {% for project in projects %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">{{ project.id }}</td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                        <a href="{{ url_for('project_routes.project_detail', project_id=project.id) }}"
+                            class="text-white project-link"
+                            onclick="saveProjectToLocalStorage({{ project.id }}, '{{ project.name | e }}')">{{
+                            project.name }}</a>
+                        <!-- {{ project.name }} -->
+                    </td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                        <a href="{{ project.url }}" target="_blank" class="text-blue-500 hover:text-blue-700">{{
+                            project.url }}</a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">
+                        <a href="{{ url_for('project_routes.project_detail', project_id=project.id) }}"
+                            class="text-white project-link"
+                            onclick="saveProjectToLocalStorage({{ project.id }}, '{{ project.name | e }}')">Управлять</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">Проекты не найдены.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Функция для сохранения ID и названия проекта в localStorage
+    function saveProjectToLocalStorage(projectId, projectName) {
+        try {
+            localStorage.setItem('selectedProjectId', projectId);
+            localStorage.setItem('selectedProjectName', projectName);
+            console.log('Проект сохранен в localStorage: ' + projectName + ' (ID: ' + projectId + ')');
+
+            // Если селектор в хедере инициализирован, обновляем его
+            if (window.projectSelector) {
+                window.projectSelector.updateSelectedProjectDisplay();
+            }
+
+            // После сохранения проекта, обновляем ссылку "Проверка позиций" в меню
+            updateProjectLink(projectId);
+        } catch (error) {
+            console.error('Ошибка при сохранении проекта в localStorage:', error);
+        }
+    }
+
+    // Функция для получения ID проекта из localStorage
+    function getProjectIdFromLocalStorage() {
+        try {
+            return localStorage.getItem('selectedProjectId');
+        } catch (error) {
+            console.error('Ошибка при получении ID проекта из localStorage:', error);
+            return null;
+        }
+    }
+
+    // Функция для обновления ссылки "Проверка позиций" в меню
+    function updateProjectLink(projectId) {
+        const projectLinks = document.querySelectorAll('.project-link');
+        projectLinks.forEach(link => {
+            if (link.textContent.includes('Проверка позиций')) {
+                link.href = '/projects/' + projectId + '/positions';
+            }
+        });
+    }
+</script>
+
+{% endblock %}

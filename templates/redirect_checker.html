@@ -1,0 +1,307 @@
+{% extends "layout.html" %}
+
+{% block title %}Проверка редиректов - SEO орбита{% endblock %}
+{% block meta_description %}Проверьте цепочки редиректов и коды ответов сервера. Быстрый и надежный инструмент для
+аудита перенаправлений.{% endblock %}
+{% block meta_keywords %}проверка редиректов, коды статуса HTTP, аудит перенаправлений, SEO аудит{% endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Проверка редиректов</h1>
+
+    {% set info_content %}
+    <p>Этот инструмент позволяет массово проверить редиректы для разных вариаций URL, чтобы убедиться в
+        правильной настройке сервера.</p>
+    <ol class="list-decimal list-inside mt-2">
+        <li><strong>Генерация списка:</strong> Введите URL внутренней страницы сайта (например,
+            `https://example.com/category/page`), чтобы сгенерировать список тестовых URL. Это позволит
+            проверить редиректы для www/без-www, http/https, с/без слеша, а также чувствительность к регистру.
+        </li>
+        <li><strong>Редактирование:</strong> Вы можете вручную отредактировать сгенерированный список URL перед
+            запуском проверки.</li>
+        <li><strong>Проверка:</strong> Инструмент отправит запросы ко всем URL из списка и покажет итоговый код
+            ответа, цепочку редиректов и конечный URL.</li>
+    </ol>
+    {% endset %}
+    {{ render_info_block("Описание функционала", info_content) }}
+    <!-- Блок управления -->
+
+    <!-- Этап 1: Ввод URL -->
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
+        <div class="mb-4">
+            <label for="url-input" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">URL для
+                генерации списка:</label>
+            <input type="url" id="url-input"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="https://example.com/path" autocomplete="off">
+        </div>
+        <button id="generate-list-button" class="action-btn-2">
+            Сгенерировать список
+        </button>
+    </div>
+
+    <!-- Этап 2: Редактирование списка и запуск проверки -->
+    <div id="url-list-section" class="hidden bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+        <div class="mb-4">
+            <label for="urls-to-check" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Список URL
+                для проверки (редактируемый):</label>
+            <textarea id="urls-to-check" rows="10"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+        </div>
+        <button id="check-redirects-button" class="action-btn-1">
+            Запустить проверку
+        </button>
+    </div>
+
+
+    <div id="loader" class="hidden mt-4">
+        <p>Идет проверка, пожалуйста, подождите...</p>
+    </div>
+
+    <!-- Результаты -->
+    <div id="results-container" class="mt-8">
+        <!-- Результаты будут отображаться здесь -->
+    </div>
+
+    <!-- Кнопки управления результатами -->
+    <div id="results-actions" class="hidden mt-4 space-x-2">
+        <button id="copy-results-btn" class="action-btn no-underline">Копировать в буфер</button>
+        <button id="download-xlsx-btn" class="action-btn no-underline">XLSX</button>
+        <button id="download-csv-utf8-btn" class="action-btn no-underline">CSV (utf-8)</button>
+        <button id="download-csv-win1251-btn" class="action-btn no-underline">CSV (windows-1251)</button>
+        <button id="download-txt-btn" class="action-btn no-underline">TXT</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlInput = document.getElementById('url-input');
+        const generateListButton = document.getElementById('generate-list-button');
+        const urlListSection = document.getElementById('url-list-section');
+        const urlsToCheckTextarea = document.getElementById('urls-to-check');
+        const checkRedirectsButton = document.getElementById('check-redirects-button');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('results-container');
+
+        // Логика для скрытия/показа информационного блока
+        const toggleInfoBtn = document.getElementById('toggle-info-btn');
+        const infoContent = document.getElementById('info-content');
+        if (toggleInfoBtn && infoContent) {
+            toggleInfoBtn.addEventListener('click', function () {
+                const isHidden = infoContent.classList.toggle('hidden');
+                toggleInfoBtn.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+        }
+
+        // Этап 1: Генерация списка URL
+        generateListButton.addEventListener('click', function () {
+            const url = urlInput.value;
+            if (!url) {
+                alert('Пожалуйста, введите URL.');
+                return;
+            }
+
+            // Используем новый эндпоинт для генерации списка
+            fetch("{{ url_for('redirect_checker.generate_url_list') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ url: url }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    urlsToCheckTextarea.value = data.urls.join('\n');
+                    urlListSection.classList.remove('hidden');
+                })
+                .catch(error => {
+                    alert('Произошла ошибка при генерации списка URL.');
+                    console.error('Error:', error);
+                });
+        });
+
+        // Этап 2: Проверка редиректов
+        checkRedirectsButton.addEventListener('click', function () {
+            const urls = urlsToCheckTextarea.value.split('\n').filter(u => u.trim() !== '');
+            if (urls.length === 0) {
+                alert('Список URL для проверки пуст.');
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            loader.classList.remove('hidden');
+            urlListSection.classList.add('hidden');
+
+            // Используем эндпоинт для проверки
+            fetch("{{ url_for('redirect_checker.check_redirects_page') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ urls: urls }), // Отправляем массив URL
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loader.classList.add('hidden');
+                    if (data.error) {
+                        resultsContainer.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+                        return;
+                    }
+
+                    const table = createResultsTable(data);
+                    resultsContainer.appendChild(table);
+
+                    // Показываем кнопки управления результатами
+                    document.getElementById('results-actions').classList.remove('hidden');
+
+                    // Сохраняем данные для последующего использования
+                    resultsContainer.dataset.results = JSON.stringify(data);
+
+                    // --- Инициализация кнопок скачивания после создания результатов ---
+                    initializeDownloadButtons();
+                })
+                .catch(error => {
+                    loader.classList.add('hidden');
+                    resultsContainer.innerHTML = `<p class="text-red-500">Произошла ошибка: ${error}</p>`;
+                    console.error('Error:', error);
+                });
+        });
+
+        function createResultsTable(data) {
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-gray-200 dark:divide-gray-700';
+
+            const thead = document.createElement('thead');
+            thead.className = 'bg-gray-50 dark:bg-gray-800';
+            thead.innerHTML = `
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">№</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HTTP-ответ</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цепочка</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Конечный URL</th>
+            </tr>
+        `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700';
+
+            let index = 1;
+            for (const [originalUrl, history] of Object.entries(data)) {
+                const tr = document.createElement('tr');
+
+                const finalResponse = history[history.length - 1];
+                const chain = history.slice(0, -1).map(h => h.status_code).join(' > ');
+                const finalUrl = history.length > 1 ? finalResponse.url : '';
+                const statusCode = finalResponse.status_code;
+
+                // Определяем цвет статуса
+                let statusClass = '';
+                if (typeof statusCode === 'number') {
+                    if (statusCode >= 200 && statusCode < 300) {
+                        statusClass = 'text-green-600 dark:text-green-400';
+                    } else if (statusCode >= 300 && statusCode < 400) {
+                        statusClass = 'text-yellow-600 dark:text-yellow-400';
+                    } else if (statusCode >= 400) {
+                        statusClass = 'text-red-600 dark:text-red-400';
+                    }
+                } else {
+                    statusClass = 'text-red-600 dark:text-red-400';
+                }
+
+                tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${index++}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm max-w-xs truncate" title="${originalUrl}">${originalUrl}</td>
+                <td class="px-6 py-4 whitespace-nowrap font-bold ${statusClass}">${statusCode}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${chain}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm max-w-xs truncate" title="${finalUrl}">${finalUrl}</td>
+            `;
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+
+            return table;
+        }
+
+
+        // Обработчики для кнопок управления результатами
+        document.getElementById('copy-results-btn').addEventListener('click', function () {
+            const resultsContainer = document.getElementById('results-container');
+            const results = JSON.parse(resultsContainer.dataset.results || '{}');
+            let textToCopy = '№\tURL\tHTTP-ответ\tЦепочка\tКонечный URL\n';
+            let index = 1;
+            for (const [originalUrl, history] of Object.entries(results)) {
+                const finalResponse = history[history.length - 1];
+                const chain = history.slice(0, -1).map(h => h.status_code).join(' > ');
+                const finalUrl = history.length > 1 ? finalResponse.url : '';
+                textToCopy += `${index++}\t${originalUrl}\t${finalResponse.status_code}\t${chain}\t${finalUrl}\n`;
+            }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Результаты скопированы в буфер обмена!');
+            }, () => {
+                alert('Не удалось скопировать результаты.');
+            });
+        });
+
+        function downloadResults(format, encoding = 'utf-8') {
+            const resultsContainer = document.getElementById('results-container');
+            const results = resultsContainer.dataset.results;
+            if (!results) {
+                alert('Нет данных для скачивания.');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url_for('redirect_checker.download_redirect_results') }}?format=${format}&encoding=${encoding}`;
+
+            const hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'results_data';
+            hiddenField.value = results;
+            form.appendChild(hiddenField);
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+
+        function initializeDownloadButtons() {
+            const xlsxBtn = document.getElementById('download-xlsx-btn');
+            if (xlsxBtn) {
+                xlsxBtn.addEventListener('click', () => downloadResults('xlsx'));
+            }
+
+            const csvUtf8Btn = document.getElementById('download-csv-utf8-btn');
+            if (csvUtf8Btn) {
+                csvUtf8Btn.addEventListener('click', () => downloadResults('csv', 'utf-8'));
+            }
+
+            const csvWin1251Btn = document.getElementById('download-csv-win1251-btn');
+            if (csvWin1251Btn) {
+                csvWin1251Btn.addEventListener('click', () => downloadResults('csv', 'windows-1251'));
+            }
+
+            const txtBtn = document.getElementById('download-txt-btn');
+            if (txtBtn) {
+                txtBtn.addEventListener('click', () => downloadResults('txt'));
+            }
+        }
+    });
+</script>
+{% endblock %}

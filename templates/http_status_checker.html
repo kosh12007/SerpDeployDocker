@@ -1,0 +1,280 @@
+{% extends "layout.html" %}
+
+{% block title %}Проверка HTTP-статусов - SEO орбита{% endblock %}
+{% block meta_description %}Массовая проверка кодов ответов сервера (200, 301, 404, 500) для вашего списка URL.{%
+endblock %}
+{% block meta_keywords %}HTTP статусы, проверка кодов ответа, массовый аудит URL, SEO инструменты{% endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Проверка HTTP статусов</h1>
+
+    {% set info_content %}
+    <p>Этот инструмент позволяет массово проверить HTTP статусы URL-адресов.</p>
+    <ol class="list-decimal list-inside mt-2">
+        <li><strong>Ввод:</strong> Введите список URL (по одному на строку)</li>
+        <li><strong>Проверка:</strong> Инструмент отправит запросы ко всем URL и покажет код ответа</li>
+        <li><strong>Редиректы:</strong> Если есть редирект, будет показан конечный URL</li>
+        <li><strong>Экспорт:</strong> Скачайте результаты в нужном формате</li>
+    </ol>
+    <p class="mt-2"><strong>Ограничение:</strong> максимум <span class="font-bold text-blue-600 dark:text-blue-400">{{
+            max_urls }}</span> URL за один раз</p>
+    {% endset %}
+    {{ render_info_block("Описание функционала", info_content) }}
+
+    <!-- Форма ввода URL -->
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
+        <div class="mb-4">
+            <label for="urls-input" class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">
+                Список URL для проверки (по одному на строку):
+            </label>
+            <textarea id="urls-input" rows="12"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono text-sm"
+                placeholder="https://example.com
+https://google.com
+https://..."></textarea>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Введено URL: <span id="url-count" class="font-bold">0</span> / <span id="max-url-count">{{ max_urls
+                    }}</span>
+            </p>
+        </div>
+        <button id="check-button" class="action-btn-1">
+            Проверить статусы
+        </button>
+    </div>
+
+    <!-- Лоадер -->
+    <div id="loader" class="hidden mt-4">
+        <div class="flex items-center space-x-3">
+            <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+            <p class="text-gray-600 dark:text-gray-300">Идет проверка, пожалуйста, подождите...</p>
+            <span id="progress-text" class="text-blue-600 dark:text-blue-400 font-bold"></span>
+        </div>
+    </div>
+
+    <!-- Результаты -->
+    <div id="results-container" class="mt-8">
+        <!-- Результаты будут отображаться здесь -->
+    </div>
+
+    <!-- Кнопки управления результатами -->
+    <div id="results-actions" class="hidden mt-4 space-x-2">
+        <button id="copy-results-btn" class="action-btn no-underline">Копировать в буфер</button>
+        <button id="download-xlsx-btn" class="action-btn no-underline">XLSX</button>
+        <button id="download-csv-utf8-btn" class="action-btn no-underline">CSV (utf-8)</button>
+        <button id="download-csv-win1251-btn" class="action-btn no-underline">CSV (windows-1251)</button>
+        <button id="download-txt-btn" class="action-btn no-underline">TXT</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const urlsInput = document.getElementById('urls-input');
+        const checkButton = document.getElementById('check-button');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsActions = document.getElementById('results-actions');
+        const urlCountSpan = document.getElementById('url-count');
+        const maxUrlCount = parseInt(document.getElementById('max-url-count').textContent);
+
+        // Логика для скрытия/показа информационного блока
+        const toggleInfoBtn = document.getElementById('toggle-info-btn');
+        const infoContent = document.getElementById('info-content');
+        if (toggleInfoBtn && infoContent) {
+            toggleInfoBtn.addEventListener('click', function () {
+                const isHidden = infoContent.classList.toggle('hidden');
+                toggleInfoBtn.textContent = isHidden ? 'Показать' : 'Скрыть';
+            });
+        }
+
+        // Подсчет URL при вводе
+        urlsInput.addEventListener('input', function () {
+            const urls = urlsInput.value.split('\n').filter(u => u.trim() !== '');
+            urlCountSpan.textContent = urls.length;
+
+            if (urls.length > maxUrlCount) {
+                urlCountSpan.classList.add('text-red-500');
+                urlCountSpan.classList.remove('text-gray-700', 'dark:text-gray-300');
+            } else {
+                urlCountSpan.classList.remove('text-red-500');
+                urlCountSpan.classList.add('text-gray-700', 'dark:text-gray-300');
+            }
+        });
+
+        // Проверка HTTP статусов
+        checkButton.addEventListener('click', function () {
+            const urls = urlsInput.value.split('\n').filter(u => u.trim() !== '');
+
+            if (urls.length === 0) {
+                alert('Пожалуйста, введите хотя бы один URL.');
+                return;
+            }
+
+            if (urls.length > maxUrlCount) {
+                alert(`Превышен лимит! Максимум ${maxUrlCount} URL, введено ${urls.length}`);
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            resultsActions.classList.add('hidden');
+            loader.classList.remove('hidden');
+            checkButton.disabled = true;
+
+            fetch("{{ url_for('http_status_checker.check_http_status_api') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ urls: urls }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    loader.classList.add('hidden');
+                    checkButton.disabled = false;
+
+                    if (data.error) {
+                        resultsContainer.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+                        return;
+                    }
+
+                    const table = createResultsTable(data);
+                    resultsContainer.appendChild(table);
+
+                    // Показываем кнопки управления результатами
+                    resultsActions.classList.remove('hidden');
+
+                    // Сохраняем данные для последующего использования
+                    resultsContainer.dataset.results = JSON.stringify(data);
+
+                    // Инициализация кнопок скачивания
+                    initializeDownloadButtons();
+                })
+                .catch(error => {
+                    loader.classList.add('hidden');
+                    checkButton.disabled = false;
+                    resultsContainer.innerHTML = `<p class="text-red-500">Произошла ошибка: ${error}</p>`;
+                    console.error('Error:', error);
+                });
+        });
+
+        function createResultsTable(data) {
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-gray-200 dark:divide-gray-700';
+
+            const thead = document.createElement('thead');
+            thead.className = 'bg-gray-50 dark:bg-gray-800';
+            thead.innerHTML = `
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">№</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HTTP-ответ</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Цепочка</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Конечный URL</th>
+            </tr>
+        `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = 'bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700';
+
+            let index = 1;
+            for (const [originalUrl, history] of Object.entries(data)) {
+                const tr = document.createElement('tr');
+
+                const finalResponse = history[history.length - 1];
+                const chain = history.slice(0, -1).map(h => h.status_code).join(' > ');
+                const finalUrl = history.length > 1 ? finalResponse.url : '';
+                const statusCode = finalResponse.status_code;
+
+                // Определяем цвет статуса
+                let statusClass = '';
+                if (typeof statusCode === 'number') {
+                    if (statusCode >= 200 && statusCode < 300) {
+                        statusClass = 'text-green-600 dark:text-green-400';
+                    } else if (statusCode >= 300 && statusCode < 400) {
+                        statusClass = 'text-yellow-600 dark:text-yellow-400';
+                    } else if (statusCode >= 400) {
+                        statusClass = 'text-red-600 dark:text-red-400';
+                    }
+                } else {
+                    statusClass = 'text-red-600 dark:text-red-400';
+                }
+
+                tr.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${index++}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm max-w-xs truncate" title="${originalUrl}">${originalUrl}</td>
+                <td class="px-6 py-4 whitespace-nowrap font-bold ${statusClass}">${statusCode}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${chain}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm max-w-xs truncate" title="${finalUrl}">${finalUrl}</td>
+            `;
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+
+            return table;
+        }
+
+        // Копирование результатов
+        document.getElementById('copy-results-btn').addEventListener('click', function () {
+            const results = JSON.parse(resultsContainer.dataset.results || '{}');
+            let textToCopy = '№\tURL\tHTTP-ответ\tЦепочка\tКонечный URL\n';
+            let index = 1;
+            for (const [originalUrl, history] of Object.entries(results)) {
+                const finalResponse = history[history.length - 1];
+                const chain = history.slice(0, -1).map(h => h.status_code).join(' > ');
+                const finalUrl = history.length > 1 ? finalResponse.url : '';
+                textToCopy += `${index++}\t${originalUrl}\t${finalResponse.status_code}\t${chain}\t${finalUrl}\n`;
+            }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Результаты скопированы в буфер обмена!');
+            }, () => {
+                alert('Не удалось скопировать результаты.');
+            });
+        });
+
+        function downloadResults(format, encoding = 'utf-8') {
+            const results = resultsContainer.dataset.results;
+            if (!results) {
+                alert('Нет данных для скачивания.');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ url_for('http_status_checker.download_http_status_results') }}?format=${format}&encoding=${encoding}`;
+
+            const hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'results_data';
+            hiddenField.value = results;
+            form.appendChild(hiddenField);
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            form.appendChild(csrfInput);
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+
+        function initializeDownloadButtons() {
+            document.getElementById('download-xlsx-btn').onclick = () => downloadResults('xlsx');
+            document.getElementById('download-csv-utf8-btn').onclick = () => downloadResults('csv', 'utf-8');
+            document.getElementById('download-csv-win1251-btn').onclick = () => downloadResults('csv', 'windows-1251');
+            document.getElementById('download-txt-btn').onclick = () => downloadResults('txt');
+        }
+    });
+</script>
+{% endblock %}

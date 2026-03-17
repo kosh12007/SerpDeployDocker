@@ -1,0 +1,5 @@
+ALTER TABLE parsing_sessions
+ADD COLUMN region VARCHAR(255),
+ADD COLUMN device VARCHAR(255),
+ADD COLUMN depth INT,
+ADD COLUMN yandex_type VARCHAR(255);

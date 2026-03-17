@@ -1,0 +1,13 @@
+D:\Serp\serp\main.py
+D:\Serp\serp\app\parsing.py
+D:\Serp\serp\app\top_sites_parser_thread.py
+D:\Serp\serp\app\utils.py
+D:\Serp\serp\app\clustering\clustering_service.py
+D:\Serp\serp\app\db\settings_db.py
+D:\Serp\serp\app\uniqueness\checker.py
+D:\Serp\serp\app\blueprints\settings_routes.py
+D:\Serp\serp\app\blueprints\top_sites_routes.py
+D:\Serp\serp\app\blueprints\dashboard\dashboard_routes.py
+D:\Serp\serp\templates\settings.html
+D:\Serp\serp\migrations\20260306_add_uniqueness_cache_ttl_setting.sql
+D:\Serp\serp\tests\test_settings.py

@@ -1,0 +1,251 @@
+{% extends "layout.html" %}
+
+{% block title %}Кластеризация запросов (Hard-группировка) - SEO орбита{% endblock %}
+{% block meta_description %}Интеллектуальная группировка ключевых фраз на основе схожести поисковой выдачи.
+Оптимизируйте структуру сайта с помощью Hard-кластеризации.{% endblock %}
+{% block meta_keywords %}кластеризация запросов, группировка ключевых слов, Hard кластеризация, семантическое ядро{%
+endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Инструмент Hard-кластеризации</h1>
+
+    {% set info_content %}
+    <ol class="list-decimal list-inside mt-2">
+        <li>Выберите проект из списка.</li>
+        <li>Убедитесь, что для ключевых слов в проекте хотя бы раз снимались позиции (это необходимо для получения
+            данных SERP).</li>
+        <li>Если позиции не снимались, перейдите в проект, снимите позиции и вернитесь на эту страницу.</li>
+        <li>Выберите "порог совпадений" — минимальное количество общих URL для объединения запросов в одну группу.</li>
+        <li>Нажмите "Выполнить кластеризацию" для предпросмотра.</li>
+    </ol>
+    {% endset %}
+    {{ render_info_block("Описание функционала", info_content) }}
+    <!-- Блок управления -->
+    <div class="mb-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Выбор проекта -->
+            <div>
+                <label for="project-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Выберите
+                    проект</label>
+                <select id="project-select"
+                    class="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <option value="">-- Выберите проект --</option>
+                    {% if projects %}
+                    {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Загрузит ключевые слова из выбранного проекта.
+                </p>
+            </div>
+
+            <!-- Порог и кнопки -->
+            <div>
+                <!-- Слайдер порога -->
+                <div>
+                    <label for="threshold-slider" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Порог совпадений (URL): <span id="threshold-value" class="font-bold">3</span>
+                    </label>
+                    <input id="threshold-slider" type="range" min="2" max="10" value="3" class="w-full mt-2">
+                </div>
+
+                <!-- Кнопки управления -->
+                <!-- <div class="flex items-end space-x-2 mt-4"> -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <button id="preview-clustering-btn" class="action-btn-2 no-underline font-bold py-2 px-4 rounded">
+                        Выполнить кластеризацию
+                    </button>
+                    <button id="cluster-editor-btn"
+                        class="hidden action-btn-1 no-underline font-bold py-2 px-4 rounded">
+                        Редактор кластеров
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Спиннер загрузки -->
+    <div id="spinner" class="hidden text-center py-10">
+        <p class="text-lg">Выполняется кластеризация, это может занять некоторое время...</p>
+        <!-- Можно добавить иконку спиннера -->
+    </div>
+
+    <!-- Результаты -->
+    <div id="results-container" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Результаты</h2>
+            <button id="apply-clustering-btn" class="hidden action-btn-1">
+                Применить для проекта
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Колонка "Было" -->
+            <div id="was-column"
+                class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-dashed border-gray-300">
+                <h4 class="text-lg font-semibold text-gray-500 dark:text-gray-300 mb-4 uppercase tracking-wider">Было
+                    (Текущие группы)</h4>
+                <div id="was-container" class="space-y-4 max-h-[60vh] overflow-y-auto"></div>
+            </div>
+            <!-- Колонка "Стало" -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200">
+                <h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4 uppercase tracking-wider">Стало
+                    (Новая Hard-группировка)</h4>
+                <div id="became-container" class="space-y-4 max-h-[60vh] overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const projectSelect = document.getElementById('project-select');
+        const thresholdSlider = document.getElementById('threshold-slider');
+        const thresholdValueSpan = document.getElementById('threshold-value');
+        const previewBtn = document.getElementById('preview-clustering-btn');
+        const applyBtn = document.getElementById('apply-clustering-btn');
+
+        const spinner = document.getElementById('spinner');
+        const resultsContainer = document.getElementById('results-container');
+        const wasColumn = document.getElementById('was-column');
+        const wasContainer = document.getElementById('was-container');
+        const becameContainer = document.getElementById('became-container');
+
+
+        let currentThreshold = 3;
+        let currentProjectId = null;
+
+        thresholdSlider.addEventListener('input', (e) => {
+            currentThreshold = e.target.value;
+            thresholdValueSpan.textContent = currentThreshold;
+        });
+
+        projectSelect.addEventListener('change', (e) => {
+            currentProjectId = e.target.value ? parseInt(e.target.value, 10) : null;
+            const clusterEditorBtn = document.getElementById('cluster-editor-btn');
+
+            applyBtn.classList.toggle('hidden', !currentProjectId);
+            clusterEditorBtn.classList.toggle('hidden', !currentProjectId);
+
+            if (currentProjectId) {
+                const editorUrl = `{{ url_for('cluster_editor_bp.cluster_editor', project_id=0) }}`.replace('0', currentProjectId);
+                // Установка href для кнопки не будет работать, нужно обработать событие click
+                clusterEditorBtn.onclick = function () {
+                    window.location.href = editorUrl;
+                };
+            }
+
+            if (!currentProjectId) {
+                resultsContainer.classList.add('hidden');
+            }
+        });
+
+        previewBtn.addEventListener('click', async () => {
+            if (!currentProjectId) {
+                alert("Пожалуйста, выберите проект для кластеризации.");
+                return;
+            }
+
+            spinner.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            previewBtn.disabled = true;
+
+            try {
+                const response = await fetch('{{ url_for("clustering_bp.preview_clustering") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ project_id: currentProjectId, threshold: currentThreshold })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ошибка при получении данных для предпросмотра.');
+                }
+
+                const data = await response.json();
+                renderComparison(data.was, data.became);
+                resultsContainer.classList.remove('hidden');
+
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+            } finally {
+                spinner.classList.add('hidden');
+                previewBtn.disabled = false;
+            }
+        });
+
+        applyBtn.addEventListener('click', async () => {
+            if (!currentProjectId) {
+                alert("Не выбран проект для применения изменений.");
+                return;
+            }
+
+            if (!confirm('Вы уверены, что хотите применить новую структуру групп? Это действие необратимо.')) {
+                return;
+            }
+
+            applyBtn.disabled = true;
+
+            try {
+                const response = await fetch('{{ url_for("clustering_bp.apply_clustering") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ project_id: currentProjectId, threshold: currentThreshold })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Ошибка при применении кластеризации.');
+                }
+
+                alert(result.message || 'Кластеризация успешно применена. Страница будет перезагружена.');
+                window.location.reload();
+
+            } catch (error) {
+                console.error(error);
+                alert(error.message);
+                applyBtn.disabled = false;
+            }
+        });
+
+        function renderComparison(wasData, becameData) {
+            if (currentProjectId) {
+                wasContainer.innerHTML = wasData && wasData.length > 0 ? wasData.map(renderGroup).join('') : '<p class="text-gray-500">Текущих групп в проекте нет.</p>';
+                wasColumn.classList.remove('hidden');
+            } else {
+                wasColumn.classList.add('hidden');
+            }
+
+            becameContainer.innerHTML = becameData && becameData.length > 0 ? becameData.map(renderGroup).join('') : '<p class="text-gray-500">Не удалось создать новые группы.</p>';
+        }
+
+        function renderGroup(group) {
+            const keywordsHtml = group.keywords.map(kw => `<li class="text-gray-800 dark:text-gray-300">${kw}</li>`).join('');
+            return `
+            <div class="p-3 bg-white dark:bg-gray-600 rounded shadow-sm">
+                <h5 class="font-bold text-md mb-2 text-gray-900 dark:text-white">${group.name} 
+                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">(${group.total_volume})</span>
+                </h5>
+                <ul class="list-disc pl-5 text-sm">
+                    ${keywordsHtml}
+                </ul>
+            </div>
+        `;
+        }
+    });
+</script>
+{% endblock %}

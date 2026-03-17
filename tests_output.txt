@@ -1,0 +1,235 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.3, pytest-8.4.2, pluggy-1.6.0 -- C:\Program Files\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: d:\Serp\serp
+plugins: anyio-4.10.0
+collecting ... collected 125 items
+
+tests/test_ai.py::TestDeepSeekService::test_add_message PASSED           [  0%]
+tests/test_ai.py::TestDeepSeekService::test_api_connection_error FAILED  [  1%]
+tests/test_ai.py::TestDeepSeekService::test_authentication_error PASSED  [  2%]
+tests/test_ai.py::TestDeepSeekService::test_clear_message_list_after_set_prompt PASSED [  3%]
+tests/test_ai.py::TestDeepSeekService::test_deepseek_service_initialization_empty_token PASSED [  4%]
+tests/test_ai.py::TestDeepSeekService::test_deepseek_service_initialization_invalid_token PASSED [  4%]
+tests/test_ai.py::TestDeepSeekService::test_deepseek_service_initialization_valid_token PASSED [  5%]
+tests/test_ai.py::TestDeepSeekService::test_rate_limit_error PASSED      [  6%]
+tests/test_ai.py::TestDeepSeekService::test_send_question FAILED         [  7%]
+tests/test_ai.py::TestDeepSeekService::test_set_prompt PASSED            [  8%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_ai_page PASSED           [  8%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_ai_status_route PASSED   [  9%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_article_generator_page PASSED [ 10%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_ask_ai_missing_fields PASSED [ 11%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_ask_ai_no_api_key PASSED [ 12%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_ask_ai_success PASSED    [ 12%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_delete_ai_task_failure PASSED [ 13%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_delete_ai_task_success PASSED [ 14%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_download_ai_task_not_found PASSED [ 15%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_download_ai_task_success PASSED [ 16%]
+tests/test_ai_routes.py::AIRoutesTestCase::test_download_article_task_success PASSED [ 16%]
+tests/test_api_integration.py::TestAPIIntegration::test_api_rate_limiting_simulation FAILED [ 17%]
+tests/test_api_integration.py::TestAPIIntegration::test_api_with_mocked_db FAILED [ 18%]
+tests/test_api_integration.py::TestAPIIntegration::test_auth_endpoints_integration PASSED [ 19%]
+tests/test_api_integration.py::TestAPIIntegration::test_external_api_integration PASSED [ 20%]
+tests/test_api_integration.py::TestAPIIntegration::test_project_crud_integration PASSED [ 20%]
+tests/test_api_integration.py::TestAPIIntegration::test_session_handling FAILED [ 21%]
+tests/test_api_integration.py::TestAPIIntegration::test_unauthorized_access_to_protected_endpoints FAILED [ 22%]
+tests/test_api_integration.py::TestAPIEndpointsWithData::test_api_projects_endpoint FAILED [ 23%]
+tests/test_api_integration.py::TestAPIEndpointsWithData::test_api_users_endpoint FAILED [ 24%]
+tests/test_api_integration.py::TestAPIEndpointsWithData::test_health_check_endpoint FAILED [ 24%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_check_balance_request_exception PASSED [ 25%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_check_balance_success PASSED [ 26%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_estimate_limits_empty_queries PASSED [ 27%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_estimate_limits_google PASSED [ 28%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_estimate_limits_parser_google PASSED [ 28%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_estimate_limits_parser_yandex_search_api PASSED [ 29%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_estimate_limits_yandex_search_api PASSED [ 30%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_locations PASSED   [ 31%]
+tests/test_api_routes.py::APIRoutesTestCase::test_api_yandex_regions PASSED [ 32%]
+tests/test_auth.py::AuthTestCase::test_login_failure PASSED              [ 32%]
+tests/test_auth.py::AuthTestCase::test_login_success PASSED              [ 33%]
+tests/test_auth.py::AuthTestCase::test_logout PASSED                     [ 34%]
+tests/test_auth.py::AuthTestCase::test_register_passwords_mismatch PASSED [ 35%]
+tests/test_auth.py::AuthTestCase::test_register_short_password PASSED    [ 36%]
+tests/test_auth.py::AuthTestCase::test_register_success PASSED           [ 36%]
+tests/test_auth.py::AuthTestCase::test_register_username_exists PASSED   [ 37%]
+tests/test_clustering_fix.py::test_clustering_service_changes PASSED     [ 38%]
+tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_access_authorized FAILED [ 39%]
+tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_access_unauthorized FAILED [ 40%]
+tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_ssrf_protection_allowed FAILED [ 40%]
+tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_ssrf_protection_blocked FAILED [ 41%]
+tests/test_main_routes.py::MainRoutesTestCase::test_delete_session_not_found PASSED [ 42%]
+tests/test_main_routes.py::MainRoutesTestCase::test_delete_session_success PASSED [ 43%]
+tests/test_main_routes.py::MainRoutesTestCase::test_delete_session_unauthorized PASSED [ 44%]
+tests/test_main_routes.py::MainRoutesTestCase::test_get_balance_success PASSED [ 44%]
+tests/test_main_routes.py::MainRoutesTestCase::test_import_locations_page PASSED [ 45%]
+tests/test_main_routes.py::MainRoutesTestCase::test_index_authorized PASSED [ 46%]
+tests/test_main_routes.py::MainRoutesTestCase::test_index_unauthorized FAILED [ 47%]
+tests/test_main_routes.py::MainRoutesTestCase::test_run_import_locations PASSED [ 48%]
+tests/test_main_routes.py::MainRoutesTestCase::test_run_yandex_regions_import PASSED [ 48%]
+tests/test_main_routes.py::MainRoutesTestCase::test_show_results_with_session PASSED [ 49%]
+tests/test_main_routes.py::MainRoutesTestCase::test_show_results_without_session PASSED [ 50%]
+tests/test_main_routes.py::MainRoutesTestCase::test_yandex_regions_import_page PASSED [ 51%]
+tests/test_models.py::TestUserModel::test_check_password_correct PASSED  [ 52%]
+tests/test_models.py::TestUserModel::test_check_password_incorrect PASSED [ 52%]
+tests/test_models.py::TestUserModel::test_get_by_email_returns_user PASSED [ 53%]
+tests/test_models.py::TestUserModel::test_get_by_id_returns_user PASSED  [ 54%]
+tests/test_models.py::TestUserModel::test_get_by_username_returns_user PASSED [ 55%]
+tests/test_models.py::TestUserModel::test_user_initialization PASSED     [ 56%]
+tests/test_models.py::TestProjectModel::test_project_initialization PASSED [ 56%]
+tests/test_models.py::TestQueryModel::test_query_initialization PASSED   [ 57%]
+tests/test_page_analyzer.py::TestPageAnalyzer::test_extract_page_data_missing_elements PASSED [ 58%]
+tests/test_page_analyzer.py::TestPageAnalyzer::test_extract_page_data_request_error PASSED [ 59%]
+tests/test_page_analyzer.py::TestPageAnalyzer::test_extract_page_data_success FAILED [ 60%]
+tests/test_page_analyzer.py::TestPageAnalyzer::test_extract_specific_params PASSED [ 60%]
+tests/test_page_analyzer.py::TestPageAnalyzer::test_stop_words_loaded PASSED [ 61%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_analysis_status_route PASSED [ 62%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_analyze_pages_create_task_failure PASSED [ 63%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_analyze_pages_no_urls PASSED [ 64%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_analyze_pages_success PASSED [ 64%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_delete_analysis_task_failure PASSED [ 65%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_delete_analysis_task_success PASSED [ 66%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_download_analysis_task_csv_format PASSED [ 67%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_download_analysis_task_not_found PASSED [ 68%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_download_analysis_task_success PASSED [ 68%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_download_analysis_task_txt_format PASSED [ 69%]
+tests/test_page_analyzer_routes.py::PageAnalyzerRoutesTestCase::test_page_analyzer_page PASSED [ 70%]
+tests/test_parsing.py::TestParsingModule::test_run_parsing_in_thread_insufficient_limits PASSED [ 71%]
+tests/test_parsing.py::TestParsingModule::test_run_parsing_in_thread_success PASSED [ 72%]
+tests/test_parsing.py::TestParsingModule::test_run_parsing_in_thread_user_not_found PASSED [ 72%]
+tests/test_parsing.py::TestParsingUtils::test_parsing_status_global_variable FAILED [ 73%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_delete_session_success PASSED [ 74%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_delete_session_unauthorized PASSED [ 75%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_download_session_results_csv PASSED [ 76%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_download_session_results_txt PASSED [ 76%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_download_session_results_xlsx PASSED [ 77%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_estimate_limits_google PASSED [ 78%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_estimate_limits_yandex_search_api PASSED [ 79%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_get_status PASSED [ 80%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_run_parser_already_running PASSED [ 80%]
+tests/test_parsing_routes.py::ParsingRoutesTestCase::test_run_parser_success PASSED [ 81%]
+tests/test_positions.py::PositionsTestCase::test_delete_session PASSED   [ 82%]
+tests/test_positions.py::PositionsTestCase::test_download_session_results PASSED [ 83%]
+tests/test_positions.py::PositionsTestCase::test_download_session_results_history PASSED [ 84%]
+tests/test_positions.py::PositionsTestCase::test_history_page PASSED     [ 84%]
+tests/test_positions.py::PositionsTestCase::test_run_parser PASSED       [ 85%]
+tests/test_positions.py::PositionsTestCase::test_show_results PASSED     [ 86%]
+tests/test_projects.py::ProjectRoutesTestCase::test_create_project_success PASSED [ 87%]
+tests/test_projects.py::ProjectRoutesTestCase::test_create_project_validation_error FAILED [ 88%]
+tests/test_projects.py::ProjectRoutesTestCase::test_delete_project_success PASSED [ 88%]
+tests/test_projects.py::ProjectRoutesTestCase::test_project_detail_access_denied PASSED [ 89%]
+tests/test_projects.py::ProjectRoutesTestCase::test_project_list_authorized PASSED [ 90%]
+tests/test_top_sites.py::TopSitesTestCase::test_delete_top_sites_task PASSED [ 91%]
+tests/test_top_sites.py::TopSitesTestCase::test_download_top_sites_task PASSED [ 92%]
+tests/test_top_sites.py::TopSitesTestCase::test_start_top_sites_parsing PASSED [ 92%]
+tests/test_top_sites.py::TopSitesTestCase::test_top_sites_page PASSED    [ 93%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_delete_top_sites_task PASSED [ 94%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_download_top_sites_task PASSED [ 95%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_download_top_sites_task_csv_format PASSED [ 96%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_download_top_sites_task_txt_format PASSED [ 96%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_estimate_limits_parser_top_sites PASSED [ 97%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_estimate_limits_top_sites PASSED [ 98%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_start_top_sites_parsing PASSED [ 99%]
+tests/test_top_sites_routes.py::TopSitesRoutesTestCase::test_top_sites_page PASSED [100%]
+
+================================== FAILURES ===================================
+________________ TestDeepSeekService.test_api_connection_error ________________
+tests\test_ai.py:178: in test_api_connection_error
+    mock_instance.chat.completions.create.side_effect = APIConnectionError(
+E   TypeError: APIConnectionError.__init__() got an unexpected keyword argument 'response'
+___________________ TestDeepSeekService.test_send_question ____________________
+tests\test_ai.py:121: in test_send_question
+    self.assertEqual(len(service.message_list), 2)  # system + assistant
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: 3 != 2
+____________ TestAPIIntegration.test_api_rate_limiting_simulation _____________
+tests\test_api_integration.py:152: in test_api_rate_limiting_simulation
+    self.assertTrue(all(code in [200, 429] for code in responses))
+E   AssertionError: False is not true
+_________________ TestAPIIntegration.test_api_with_mocked_db __________________
+tests\test_api_integration.py:125: in test_api_with_mocked_db
+    mock_conn.cursor.assert_called()
+C:\Program Files\Python313\Lib\unittest\mock.py:948: in assert_called
+    raise AssertionError(msg)
+E   AssertionError: Expected 'cursor' to have been called.
+__________________ TestAPIIntegration.test_session_handling ___________________
+tests\test_api_integration.py:203: in test_session_handling
+    self.assertIn(protected_response.status_code, [200, 302])
+E   AssertionError: 404 not found in [200, 302]
+_____ TestAPIIntegration.test_unauthorized_access_to_protected_endpoints ______
+tests\test_api_integration.py:138: in test_unauthorized_access_to_protected_endpoints
+    self.assertIn(response.status_code, [302, 401, 403])
+E   AssertionError: 404 not found in [302, 401, 403]
+_____________ TestAPIEndpointsWithData.test_api_projects_endpoint _____________
+tests\test_api_integration.py:224: in test_api_projects_endpoint
+    self.assertEqual(response.status_code, 200)
+E   AssertionError: 302 != 200
+______________ TestAPIEndpointsWithData.test_api_users_endpoint _______________
+tests\test_api_integration.py:241: in test_api_users_endpoint
+    self.assertIn(response.status_code, [200, 401, 403])
+E   AssertionError: 404 not found in [200, 401, 403]
+_____________ TestAPIEndpointsWithData.test_health_check_endpoint _____________
+tests\test_api_integration.py:248: in test_health_check_endpoint
+    self.assertEqual(response.status_code, 200)
+E   AssertionError: 404 != 200
+______________ HttpStatusCheckerTestCase.test_access_authorized _______________
+tests\test_http_status_checker.py:46: in test_access_authorized
+    self.assertEqual(response.status_code, 200)
+E   AssertionError: 404 != 200
+_____________ HttpStatusCheckerTestCase.test_access_unauthorized ______________
+tests\test_http_status_checker.py:33: in test_access_unauthorized
+    self.assertEqual(response.status_code, 302)
+E   AssertionError: 404 != 302
+___________ HttpStatusCheckerTestCase.test_ssrf_protection_allowed ____________
+tests\test_http_status_checker.py:93: in test_ssrf_protection_allowed
+    self.assertEqual(response.status_code, 200)
+E   AssertionError: 404 != 200
+___________ HttpStatusCheckerTestCase.test_ssrf_protection_blocked ____________
+tests\test_http_status_checker.py:65: in test_ssrf_protection_blocked
+    self.assertEqual(response.status_code, 200)
+E   AssertionError: 404 != 200
+_________________ MainRoutesTestCase.test_index_unauthorized __________________
+tests\test_main_routes.py:40: in test_index_unauthorized
+    self.assertEqual(response.status_code, 302)  # Редирект на login
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AssertionError: 200 != 302
+_______________ TestPageAnalyzer.test_extract_page_data_success _______________
+tests\test_page_analyzer.py:73: in test_extract_page_data_success
+    [][  # h3-h6
+E   TypeError: list indices must be integers or slices, not tuple
+____________ TestParsingUtils.test_parsing_status_global_variable _____________
+tests\test_parsing.py:152: in test_parsing_status_global_variable
+    self.assertEqual(parsing_module.parsing_status["progress"], 0)
+E   AssertionError: 100 != 0
+_________ ProjectRoutesTestCase.test_create_project_validation_error __________
+tests\test_projects.py:93: in test_create_project_validation_error
+    self.assertIn('Название и URL обязательны', response.data.decode('utf-8'))
+E   AssertionError: 'Название и URL обязательны' not found in '<!DOCTYPE html>\n<html lang="ru">\n\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <meta name="csrf-token" content="IjFjZDczODJhNDhkYTIxN2M1Y2IwMTNiOWE1MGJiMjhlZTk0Y2I2YTMi.aZXB6Q.aIrSFBZJtnhdymBbJ5IO5xNe6l8">\n\n    <!-- Базовые СЕО теги -->\n    <title>\nСоздание нового проекта\n</title>\n    <meta name="description"\n        content="SEO орбита - профессиональный набор инструментов для анализа SERP, отслеживания позиций, кластеризации запросов и технического аудита сайтов.">\n    <meta name="keywords"\n        content="SEO, анализ позиций, парсинг SERP, кластеризация запросов, технический аудит, SEO инструменты">\n    <link rel="canonical" href="http://localhost/projects/create">\n\n    <!-- Open Graph / Facebook -->\n    <meta property="og:type" content="website">\n    <meta property="og:url" content="http://localhost/projects/create">\n    <meta property="og:title" content="\nСоздание нового проекта\n">\n    <meta property="og:description" content="SEO орбита - профессиональный набор инструментов для анализа SERP, отслеживания позиций, кластеризации запросов и технического аудита сайтов.">\n    <meta property="og:image" content="http://localhost/static/images/og-image.png">\n\n    <!-- Twitter -->\n    <meta name="twitter:card" content="summary_large_image">\n    <meta name="twitter:url" content="http://localhost/projects/create">\n    <meta name="twitter:title" content="\nСоздание нового проекта\n">\n    <meta name="twitter:description"\n        content="SEO орбита - профессиональный набор инструментов для анализа SERP, отслеживания позиций, кластеризации запросов и технического аудита сайтов.">\n    <meta name="twitter:image" content="http://localhost/static/images/og-image.png">\n\n    \n\n    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">\n    <link rel="stylesheet" href="/static/css/toastify.css">\n    <link rel="stylesheet" type="text/css" href="/static/css/main.css">\n    <link rel="stylesheet" href="/static/vendor/flatpickr.min.css">\n    <script>\n        function applyTheme() {\n            // Удаляем старый тег link, если он есть\n            const oldLink = document.getElementById(\'theme-style\');\n            if (oldLink) {\n                oldLink.remove();\n            }\n\n            const link = document.createElement(\'link\');\n            link.id = \'theme-style\';\n            link.rel = \'stylesheet\';\n\n            if (localStorage.theme === \'dark\' || (!(\'theme\' in localStorage) && window.matchMedia(\'(prefers-color-scheme: dark)\').matches)) {\n                document.documentElement.classList.add(\'dark\');\n                link.href = "/static/css/theme-dark.css";\n            } else {\n                document.documentElement.classList.remove(\'dark\');\n                link.href = "/static/css/theme-light.css";\n            }\n            document.head.appendChild(link);\n        }\n\n        // Применяем тему при загрузке страницы\n        applyTheme();\n    </script>\n</head>\n\n<body class="bg-gray-100 text-gray-900 dark:bg-dark-background dark:text-dark-text">\n\n    <div class="min-h-screen flex flex-col">\n        <div class="sticky top-0 z-50">\n\n            <header class="bg-white dark:bg-gray-800 shadow-md">\n    <div class="mx-auto py-2 pl-4 pr-20 md:pr-20 lg:pr-4 flex justify-between items-center">\n        <div class="flex items-center space-x-4">\n            <h1 class="text-xl font-bold"><a href="/"\n                    class="text-gray-900 dark:text-dark-text no-underline">SEO орбита</a></h1>\n\n            \n            <!-- Селектор проектов (скрыт на мобильных, перенесён в нижнюю панель) -->\n            <div id="project-selector-trigger" class="project-selector-trigger hidden-mobile">\n                <span id="selected-project-name">Выберите проект</span>\n                <svg class="project-selector-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16"\n                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"\n                    stroke-linejoin="round">\n                    <polyline points="6 9 12 15 18 9"></polyline>\n                </svg>\n            </div>\n            \n        </div>\n\n        \n        <div class="flex items-center space-x-4">\n            <div class="flex items-center space-x-2">\n                <span class="hidden-mobile">Привет,</span>\n                <span>\n                    \n                    <a href="/settings/" class="text-blue-500 dark:text-dark-link">testuser</a>\n                    \n                    <span class="hidden-mobile">(Лимиты: &lt;MagicMock name=&#39;_get_user().limits&#39; id=&#39;1657423106400&#39;&gt;)</span></span>\n                <a href="/auth/logout" class="text-blue-500 dark:text-dark-link">Выйти</a>\n            </div>\n            \n            <!-- Баланс (скрыт на мобильных, перенесён в нижнюю панель) -->\n            <div class="flex items-center space-x-2 hidden-mobile">\n                <span>Баланс:</span> <span id="balance-display">Загрузка...</span>\n                <button id="refresh-balance-btn"\n                    class="action-btn no-underline font-bold py-2 px-4 rounded">Обновить</button>\n            </div>\n            \n            <button id="theme-toggle"\n                class="font-bold rounded btn-volumetric p-2 md:py-2 md:px-4 flex items-center justify-center">\n                <span class="hidden-mobile">Сменить тему </span>\n                <span class="lg:hidden">\n                    <!-- Sun (Dark Mode -> Light) -->\n                    <svg class="w-6 h-6 hidden dark:block " xmlns="http://www.w3.org/2000/svg" fill="none"\n                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">\n                        <path stroke-linecap="round" stroke-linejoin="round"\n                            d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />\n                    </svg>\n                    <!-- Moon (Light Mode -> Dark) -->\n                    <svg class="w-6 h-6 block dark:hidden" xmlns="http://www.w3.org/2000/svg" fill="none"\n                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">\n                        <path stroke-linecap="round" stroke-linejoin="round"\n                            d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />\n                    </svg>\n                </span>\n            </button>\n        </div>\n        \n        <!-- Кнопка бургер-меню (видна только на мобильных < 1024px) -->\n        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Открыть меню" aria-expanded="false">\n            <span class="burger-line"></span>\n            <span class="burger-line"></span>\n            <span class="burger-line"></span>\n        </button>\n    </div>\n</header>\n\n\n<!-- Overlay для мобильного меню -->\n<div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>\n\n<!-- Desktop Navigation -->\n<nav id="desktop-navigation" class="dws-menu bg-gray-100 hidden lg:block">\n    <ul class="z-50">\n        <li class="relative group py-2">\n            \n            <a href="#" onclick="redirectToProjectPositions()" class="text-white project-link">Проверка\n                позиций</a>\n            \n            <ul class="absolute hidden dropdown-blur-blue z-10">\n\n                <li class="relative group py-2">\n                    <a href="/quick-check" class="text-white relative z-10">Экспресс\n                        Проверка позиций</a>\n                    <ul class="absolute hidden dropdown-blur-blue z-10">\n                        <li class="py-2"><a href="/show-results" class="text-white">История\n                                проверок</a></li>\n                    </ul>\n                </li>\n\n                <li class="relative group py-2">\n                    <a href="/projects" class="text-white relative z-10">Проекты</a>\n                    <ul class="absolute hidden dropdown-blur-blue z-10">\n                        <li class="py-2"><a href="/projects/create"\n                                class="text-white">Создать\n                                проект</a></li>\n                    </ul>\n                </li>\n\n            </ul>\n        </li>\n        <!-- <li class="py-2"><a href="/show-results" class="text-white">История\n                проверок</a></li> -->\n        <li class="py-2"><a href="/top-sites" class="text-white">Выгрузка\n                ТОП-10</a></li>\n        <li class="py-2"><a href="/page-analyzer" class="text-white">Анализатор\n                страниц</a></li>\n\n        <li class="py-2"><a href="/text-tor/create" class="text-white">Создать\n                ТЗ на\n                Текст</a></li>\n\n        <li class="relative group py-2">\n            <a href="#" class="text-white">СЕО Инструменты</a>\n            <ul class="absolute hidden dropdown-blur-blue z-10">\n                <li><a href="/check-redirects" class="text-white">Проверка\n                        редиректов</a></li>\n                <li><a href="/http-status-checker" class="text-white">Проверка\n                        HTTP статусов</a></li>\n                <li class="py-2"><a href="/text-analyzer" class="text-white">Анализатор\n                        текста</a></li>\n                <li><a href="/api/clusters/" class="text-white">Кластеризация</a></li>\n                <li class="py-2"><a href="/uniqueness" class="text-white">Проверка\n                        уникальности</a></li>\n\n                <li><a href="/keyword-frequency" class="text-white">Частотность ключевых слов (В\n                        разработке)</a>\n                </li>\n            </ul>\n        </li>\n\n        <li class="relative group py-2">\n            <a href="#" class="text-white">AI Инструменты</a>\n            <ul class="absolute hidden dropdown-blur-blue z-10">\n                <li><a href="/ai" class="text-white">AI\n                        Ассистент</a></li>\n                <li><a href="/article-generator" class="text-white">Генератор\n                        статей</a></li>\n\n            </ul>\n        </li>\n    </ul>\n</nav>\n\n<!-- Mobile Navigation -->\n<nav id="mobile-navigation" class="mobile-main-navigation lg:hidden">\n    <ul>\n        <li>\n            \n            <a href="#" onclick="redirectToProjectPositions()" class="mobile-menu-link project-link">Проверка\n                позиций</a>\n            \n        </li>\n        <li><a href="/quick-check" class="mobile-menu-link">Экспресс Проверка позиций</a></li>\n        <li><a href="/show-results" class="mobile-menu-link">История проверок</a></li>\n        <li><a href="/projects" class="mobile-menu-link">Проекты</a></li>\n        <li><a href="/projects/create" class="mobile-menu-link">Создать проект</a></li>\n        <li><a href="/top-sites" class="mobile-menu-link">Выгрузка ТОП-10</a></li>\n        <li><a href="/page-analyzer" class="mobile-menu-link">Анализатор страниц</a></li>\n        <li><a href="/text-tor/create" class="mobile-menu-link">Создать ТЗ на Текст</a>\n        </li>\n        <li class="mobile-menu-group-title">СЕО Инструменты</li>\n        <li><a href="/check-redirects" class="mobile-menu-link">Проверка\n                редиректов</a></li>\n        <li><a href="/http-status-checker" class="mobile-menu-link">Проверка\n                HTTP статусов</a></li>\n        <li><a href="/text-analyzer" class="mobile-menu-link">Анализатор текста</a></li>\n        <li><a href="/api/clusters/" class="mobile-menu-link">Кластеризация</a></li>\n        <li><a href="/uniqueness" class="mobile-menu-link">Проверка уникальности</a>\n        </li>\n        <li class="mobile-menu-group-title">AI Инструменты</li>\n        <li><a href="/ai" class="mobile-menu-link">AI Ассистент</a></li>\n        <li><a href="/article-generator" class="mobile-menu-link">Генератор статей ТЕСТ</a></li>\n    </ul>\n</nav>\n\n\n<!-- Модальное окно выбора проекта -->\n<div id="project-selector-modal" class="hidden fixed inset-0 z-50 flex items-start justify-center pt-20">\n    <!-- Overlay для закрытия по клику вне модального окна -->\n    <div id="project-selector-overlay" class="fixed inset-0 bg-black bg-opacity-50"></div>\n\n    <!-- Контейнер модального окна -->\n    <div class="project-selector-container relative z-10">\n        <!-- Поле поиска -->\n        <div class="project-selector-search-wrapper">\n            <svg class="project-selector-search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"\n                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"\n                stroke-linejoin="round">\n                <circle cx="11" cy="11" r="8"></circle>\n                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>\n            </svg>\n            <input id="project-search-input" type="text" placeholder="Поиск проектов..."\n                class="project-selector-search-input">\n        </div>\n\n        <!-- Список проектов с прокруткой -->\n        <div id="projects-list" class="project-selector-list">\n            <!-- Проекты будут добавлены динамически -->\n        </div>\n    </div>\n</div>\n\n\n\n<!-- Мобильная нижняя панель (видна только на экранах < 1024px) -->\n<div id="mobile-bottom-bar" class="mobile-bottom-bar">\n    <div class="mobile-bottom-bar-content">\n        <!-- Селектор проектов для мобильных -->\n        <div id="project-selector-trigger-mobile" class="project-selector-trigger-mobile">\n            <span id="selected-project-name-mobile">Выберите проект</span>\n            <svg class="project-selector-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16"\n                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"\n                stroke-linejoin="round">\n                <polyline points="6 9 12 15 18 9"></polyline>\n            </svg>\n        </div>\n        \n        \n        <!-- Баланс для мобильных -->\n        <div class="mobile-balance-container">\n            <div class="mobile-balance-info">\n                <span class="mobile-balance-label">Баланс:</span>\n                <span id="balance-display-mobile" class="mobile-balance-value">Загрузка...</span>\n            </div>\n            <button id="refresh-balance-btn-mobile" class="action-btn mobile-refresh-btn">Обновить</button>\n        </div>\n        \n    </div>\n</div>\n\n<!-- Скрипт мобильного меню -->\n<script>\n    document.addEventListener(\'DOMContentLoaded\', function () {\n        const menuToggle = document.getElementById(\'mobile-menu-toggle\');\n        const menuOverlay = document.getElementById(\'mobile-menu-overlay\');\n        const mobileNav = document.getElementById(\'mobile-navigation\');\n\n        if (!menuToggle || !mobileNav) return;\n\n        // Переключение меню\n        function toggleMenu() {\n            const isOpen = mobileNav.classList.contains(\'mobile-menu-open\');\n\n            if (isOpen) {\n                closeMenu();\n            } else {\n                openMenu();\n            }\n        }\n\n        // Открытие меню\n        function openMenu() {\n            mobileNav.classList.add(\'mobile-menu-open\');\n            menuToggle.classList.add(\'active\');\n            menuToggle.setAttribute(\'aria-expanded\', \'true\');\n            if (menuOverlay) {\n                menuOverlay.classList.add(\'active\');\n            }\n            document.body.style.overflow = \'hidden\';\n        }\n\n        // Закрытие меню\n        function closeMenu() {\n            mobileNav.classList.remove(\'mobile-menu-open\');\n            menuToggle.classList.remove(\'active\');\n            menuToggle.setAttribute(\'aria-expanded\', \'false\');\n            if (menuOverlay) {\n                menuOverlay.classList.remove(\'active\');\n            }\n            document.body.style.overflow = \'\';\n        }\n\n        // Обработчики событий\n        menuToggle.addEventListener(\'click\', toggleMenu);\n\n        if (menuOverlay) {\n            menuOverlay.addEventListener(\'click\', closeMenu);\n        }\n\n        // Закрытие по Escape\n        document.addEventListener(\'keydown\', function (e) {\n            if (e.key === \'Escape\' && mobileNav.classList.contains(\'mobile-menu-open\')) {\n                closeMenu();\n            }\n        });\n\n        // Закрытие при изменении размера экрана\n        window.addEventListener(\'resize\', function () {\n            if (window.innerWidth >= 1024) {\n                closeMenu();\n            }\n        });\n    });\n</script>\n<script type="text/javascript" src="/static/js/get_balance.js"></script>\n<script type="text/javascript" src="/static/js/project_selector.js"></script>\n\n        </div>\n\n        <main class="container mx-auto px-4 py-8 flex-grow">\n            \n<div class="container mx-auto px-4">\n    <h1 class="text-2xl font-bold my-4">Создание нового проекта</h1>\n    <form method="POST" action="/projects/create">\n        <input type="hidden" name="csrf_token" value="IjFjZDczODJhNDhkYTIxN2M1Y2IwMTNiOWE1MGJiMjhlZTk0Y2I2YTMi.aZXB6Q.aIrSFBZJtnhdymBbJ5IO5xNe6l8" />\n        <div class="mb-4">\n            <label for="name" class="block mb-2">Название проекта</label>\n            <input type="text" id="name" name="name" placeholder="Введите название проекта" required class="shadow w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-90 dark:text-gray-200 \n                border-gray-300 dark:border-gray-600" autocomplete="off">\n        </div>\n        <div class="mb-4">\n            <label for="url" class="block mb-2">URL проекта</label>\n            <input type="url" id="url" name="url" placeholder="URL проекта" required class="shadow w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-90 dark:text-gray-200 \n                border-gray-300 dark:border-gray-600" autocomplete="off">\n        </div>\n        <button type="submit"\n            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">\n            Создать\n        </button>\n    </form>\n</div>\n\n        </main>\n        <footer class="bg-gray-800 text-white p-4">\n    <div class="container mx-auto flex justify-between items-center">\n        <p>&copy; 2026 SEO орбита. Все права защищены.</p>\n        <div class="flex items-center">\n            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"\n                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"\n                class="w-6 h-6 mr-2 text-gray-500 dark:text-white">\n                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>\n                <polyline points="22,6 12,13 2,6"></polyline>\n            </svg>\n            <a href="mailto:info@mydomworld.ru" class="text-white">info@mydomworld.ru</a>\n        </div>\n    </div>\n</footer>\n    </div>\n\n    <script>\n        document.getElementById(\'theme-toggle\').addEventListener(\'click\', function () {\n            const isDark = document.documentElement.classList.contains(\'dark\');\n            if (isDark) {\n                localStorage.setItem(\'theme\', \'light\');\n            } else {\n                localStorage.setItem(\'theme\', \'dark\');\n            }\n            applyTheme();\n        });\n    </script>\n    <script type="text/javascript" src="/static/js/toastify.js"></script>\n    <script type="text/javascript" src="/static/js/custom-select.js"></script>\n    <script type="text/javascript" src="/static/js/modal.js"></script>\n    <script type="text/javascript" src="/static/vendor/flatpickr.min.js"></script>\n    <script type="text/javascript" src="/static/vendor/ru.js"></script>\n    <div id="flash-messages" style="display: none;"\n        data-messages=\'[]\'></div>\n    <script>\n        document.addEventListener(\'DOMContentLoaded\', function () {\n            const flashDiv = document.getElementById(\'flash-messages\');\n            if (flashDiv) {\n                const messages = JSON.parse(flashDiv.dataset.messages || \'[]\');\n                messages.forEach(item => {\n                    const category = item[0];\n                    const message = item[1];\n                    let color = "#2196F3";\n                    if (category === \'success\') color = "#4CAF50";\n                    else if (category === \'danger\') color = "#EF4444";\n\n                    Toastify({\n                        text: message,\n                        duration: 3000,\n                        close: true,\n                        gravity: "top",\n                        position: "right",\n                        style: {\n                            background: color\n                        },\n                        stopOnFocus: true,\n                    }).showToast();\n                });\n            }\n        });\n\n        // Функция для перенаправления на страницу проверки позиций проекта\n        function redirectToProjectPositions() {\n            try {\n                const selectedProjectId = localStorage.getItem(\'selectedProjectId\');\n                if (selectedProjectId && selectedProjectId !== \'all\') {\n                    // Перенаправляем на страницу проверки позиций с ID сохраненного проекта\n                    window.location.href = \'/projects/\' + selectedProjectId + \'/positions\';\n                } else {\n                    // Если нет сохраненного проекта или выбраны "Все проекты"\n                    if (selectedProjectId === \'all\') {\n                        Toastify({\n                            text: "Выберите конкретный проект для просмотра позиций",\n                            duration: 3000,\n                            close: true,\n                            gravity: "top",\n                            position: "right",\n                            style: {\n                                background: "#2196F3"\n                            },\n                        }).showToast();\n                    }\n                    // Перенаправляем на список проектов\n                    window.location.href = \'/projects\';\n                }\n            } catch (error) {\n                console.error(\'Ошибка при перенаправлении:\', error);\n                // В случае ошибки также перенаправляем на список проектов\n                window.location.href = \'/projects\';\n            }\n        }\n    </script>\n    <div id="modal-placeholder"></div>\n\n\n\n    \n</body>\n\n</html>'
+============================== warnings summary ===============================
+C:\Users\user\AppData\Roaming\Python\Python313\site-packages\pymorphy2\analyzer.py:114
+  C:\Users\user\AppData\Roaming\Python\Python313\site-packages\pymorphy2\analyzer.py:114: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+    import pkg_resources
+
+tests\test_page_analyzer.py:73
+  d:\Serp\serp\tests\test_page_analyzer.py:73: SyntaxWarning: list indices must be integers or slices, not tuple; perhaps you missed a comma?
+    [][  # h3-h6
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_ai.py::TestDeepSeekService::test_api_connection_error - Typ...
+FAILED tests/test_ai.py::TestDeepSeekService::test_send_question - AssertionE...
+FAILED tests/test_api_integration.py::TestAPIIntegration::test_api_rate_limiting_simulation
+FAILED tests/test_api_integration.py::TestAPIIntegration::test_api_with_mocked_db
+FAILED tests/test_api_integration.py::TestAPIIntegration::test_session_handling
+FAILED tests/test_api_integration.py::TestAPIIntegration::test_unauthorized_access_to_protected_endpoints
+FAILED tests/test_api_integration.py::TestAPIEndpointsWithData::test_api_projects_endpoint
+FAILED tests/test_api_integration.py::TestAPIEndpointsWithData::test_api_users_endpoint
+FAILED tests/test_api_integration.py::TestAPIEndpointsWithData::test_health_check_endpoint
+FAILED tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_access_authorized
+FAILED tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_access_unauthorized
+FAILED tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_ssrf_protection_allowed
+FAILED tests/test_http_status_checker.py::HttpStatusCheckerTestCase::test_ssrf_protection_blocked
+FAILED tests/test_main_routes.py::MainRoutesTestCase::test_index_unauthorized
+FAILED tests/test_page_analyzer.py::TestPageAnalyzer::test_extract_page_data_success
+FAILED tests/test_parsing.py::TestParsingUtils::test_parsing_status_global_variable
+FAILED tests/test_projects.py::ProjectRoutesTestCase::test_create_project_validation_error
+================= 17 failed, 108 passed, 2 warnings in 10.17s =================

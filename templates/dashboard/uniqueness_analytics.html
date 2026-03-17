@@ -1,0 +1,340 @@
+{% from 'dashboard/widgets.html' import stat_card %}
+
+{% if current_user.is_super_admin %}
+<div class="mt-12 space-y-6 animate-fade-in pb-12">
+    <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Аналитика Уникальности</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Глобальная статистика использования сервиса и
+                эффективность кеширования</p>
+        </div>
+        <div
+            class="flex items-center space-x-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold ring-1 ring-amber-200/50 dark:ring-amber-700/50">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span>SuperAdmin Only</span>
+        </div>
+    </div>
+
+    <!-- Основные метрики (первый ряд) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {{ stat_card('Всего проверок', '--', 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2
+        2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'blue') }}
+        {{ stat_card('Средняя уникальность', '--%', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'teal') }}
+        {{ stat_card('Сэкономлено лимитов', '--', 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11
+        0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+        'emerald', description='благодаря кешу') }}
+        {{ stat_card('Эффективность кеша', '--%', 'M13 10V3L4 14h7v7l9-11h-7z', 'blue', description='hit rate') }}
+    </div>
+
+    <!-- Дополнительные метрики (второй ряд) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {{ stat_card('Проверок сегодня', '--', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2
+        2v12a2 2 0 002 2z', 'cyan') }}
+        {{ stat_card('За неделю', '--', 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0
+        012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0
+        01-2-2z', 'indigo') }}
+        {{ stat_card('API-запросов', '--', 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5
+        0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064', 'amber') }}
+        {{ stat_card('Объём текстов', '--', 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0
+        01-2 2h-3l-4 4z', 'rose', description='символов') }}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Состояние Кеша -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">База Кеша</h3>
+                <div class="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7v10c0 2.21 3.58 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.58 4 8 4s8-1.79 8-4M4 7c0-2.21 3.58-4 8-4s8 1.79 8 4m0 5c0 2.21-3.58 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div
+                    class="group flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/30 rounded-2xl border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Всего записей</span>
+                    </div>
+                    <span class="font-bold text-gray-900 dark:text-white text-lg" id="admin-cache-total">--</span>
+                </div>
+
+                <div
+                    class="group flex justify-between items-center p-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-transparent hover:border-emerald-100 dark:hover:border-emerald-900/30 transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span class="text-sm font-medium text-emerald-700/80 dark:text-emerald-400">Актуальные
+                            (TTL)</span>
+                    </div>
+                    <span class="font-bold text-emerald-600 text-lg" id="admin-cache-active">--</span>
+                </div>
+
+                <div
+                    class="group flex justify-between items-center p-4 bg-rose-50/50 dark:bg-rose-900/10 rounded-2xl border border-transparent hover:border-rose-100 dark:hover:border-rose-900/30 transition-all">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+                        <span class="text-sm font-medium text-rose-700/80 dark:text-rose-400">Просроченные</span>
+                    </div>
+                    <span class="font-bold text-rose-600 text-lg" id="admin-cache-expired">--</span>
+                </div>
+            </div>
+
+            <div class="mt-8 h-48 relative">
+                <canvas id="cacheEfficiencyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Топ доменов-дублей -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Топ доменов с дубликатами</h3>
+                <span class="text-xs text-gray-400 font-medium">Global Ranking</span>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 dark:bg-gray-700/30">
+                            <th class="py-3 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Домен</th>
+                            <th class="py-3 px-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Совпадений</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-top-domains-body">
+                        <tr>
+                            <td colspan="2" class="py-12 text-center">
+                                <div class="flex flex-col items-center space-y-2 text-gray-400">
+                                    <svg class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <span class="text-sm">Загрузка данных...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Топ пользователей -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Топ пользователей</h3>
+                <span class="text-xs text-gray-400 font-medium">По количеству проверок</span>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-700">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50/50 dark:bg-gray-700/30">
+                            <th class="py-3 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Пользователь
+                            </th>
+                            <th class="py-3 px-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Проверок</th>
+                            <th class="py-3 px-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Лимитов</th>
+                            <th class="py-3 px-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Ср. %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-top-users-body">
+                        <tr>
+                            <td colspan="4" class="py-12 text-center">
+                                <div class="flex flex-col items-center space-y-2 text-gray-400">
+                                    <svg class="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <span class="text-sm">Загрузка данных...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        refreshUniquenessStats();
+
+        // Обновляем раз в 5 минут
+        setInterval(refreshUniquenessStats, 5 * 60 * 1000);
+    });
+
+    async function refreshUniquenessStats() {
+        try {
+            const response = await fetch('/api/dashboard/uniqueness-stats');
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            // --- Основные карточки (первый ряд) ---
+            // Обновляем текст (ID генерируются макросом stat_card)
+            const totalTasks = document.getElementById('stat-value-всего-проверок');
+            if (totalTasks) totalTasks.textContent = data.total_tasks.toLocaleString();
+
+            const avgScore = document.getElementById('stat-value-средняя-уникальность');
+            if (avgScore) avgScore.textContent = data.avg_score + '%';
+
+            const savedLimits = document.getElementById('stat-value-сэкономлено-лимитов');
+            if (savedLimits) savedLimits.textContent = '+' + data.total_limits_saved.toLocaleString();
+
+            const hitRate = document.getElementById('stat-value-эффективность-кеша');
+            if (hitRate) hitRate.textContent = data.cache_hit_rate + '%';
+
+            // --- Дополнительные карточки (второй ряд) ---
+            const checksToday = document.getElementById('stat-value-проверок-сегодня');
+            if (checksToday) checksToday.textContent = data.checks_today.toLocaleString();
+
+            const checksWeek = document.getElementById('stat-value-за-неделю');
+            if (checksWeek) checksWeek.textContent = data.checks_this_week.toLocaleString();
+
+            const apiCalls = document.getElementById('stat-value-api-запросов');
+            if (apiCalls) apiCalls.textContent = data.total_api_calls.toLocaleString();
+
+            // Форматируем объём текстов (в тысячах символов для читаемости)
+            const textVolume = document.getElementById('stat-value-объём-текстов');
+            if (textVolume) {
+                const chars = data.total_text_length || 0;
+                if (chars >= 1000000) {
+                    textVolume.textContent = (chars / 1000000).toFixed(1) + 'M';
+                } else if (chars >= 1000) {
+                    textVolume.textContent = (chars / 1000).toFixed(1) + 'K';
+                } else {
+                    textVolume.textContent = chars.toLocaleString();
+                }
+            }
+
+            // --- Состояние кеша (ID прописаны вручную в шаблоне) ---
+            const cacheTotal = document.getElementById('admin-cache-total');
+            if (cacheTotal) cacheTotal.textContent = data.cache_total_count.toLocaleString();
+
+            const cacheActive = document.getElementById('admin-cache-active');
+            if (cacheActive) cacheActive.textContent = data.cache_active_count.toLocaleString();
+
+            const cacheExpired = document.getElementById('admin-cache-expired');
+            if (cacheExpired) cacheExpired.textContent = data.cache_expired_count.toLocaleString();
+
+            // --- Таблица доменов ---
+            const tableBody = document.getElementById('admin-top-domains-body');
+            if (data.top_domains && data.top_domains.length > 0) {
+                tableBody.innerHTML = '';
+                data.top_domains.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors';
+                    row.innerHTML = `
+                    <td class="py-3 px-2">
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${item.domain}</span>
+                    </td>
+                    <td class="py-3 px-2 text-right">
+                        <span class="text-sm font-bold text-rose-600 dark:text-rose-400">${item.count}</span>
+                    </td>
+                `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                tableBody.innerHTML = '<tr><td colspan="2" class="py-10 text-center text-gray-400">Данных пока нет</td></tr>';
+            }
+
+            // --- Таблица пользователей ---
+            const usersBody = document.getElementById('admin-top-users-body');
+            if (data.top_users && data.top_users.length > 0) {
+                usersBody.innerHTML = '';
+                data.top_users.forEach((user, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors';
+
+                    // Медаль для топ-3
+                    let medal = '';
+                    if (index === 0) medal = '🥇 ';
+                    else if (index === 1) medal = '🥈 ';
+                    else if (index === 2) medal = '🥉 ';
+
+                    row.innerHTML = `
+                    <td class="py-3 px-4">
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${medal}${user.username}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${user.checks_count}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">${user.total_spent.toLocaleString()}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <span class="text-sm font-medium ${user.avg_score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}">${user.avg_score}%</span>
+                    </td>
+                `;
+                    usersBody.appendChild(row);
+                });
+            } else {
+                usersBody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-gray-400">Данных пока нет</td></tr>';
+            }
+
+            // Отрисовка графика
+            renderCacheChart(data);
+        } catch (error) {
+            console.error('Error fetching uniqueness stats:', error);
+        }
+    }
+
+    let cacheChart = null;
+    function renderCacheChart(data) {
+        const ctx = document.getElementById('cacheEfficiencyChart').getContext('2d');
+
+        if (cacheChart) {
+            cacheChart.destroy();
+        }
+
+        const isDark = document.documentElement.classList.contains('dark');
+
+        cacheChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Актуальные', 'Просроченные'],
+                datasets: [{
+                    data: [data.cache_active_count, data.cache_expired_count],
+                    backgroundColor: [
+                        '#10b981', // emerald-500
+                        '#f43f5e'  // rose-500
+                    ],
+                    hoverOffset: 4,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: isDark ? '#9ca3af' : '#4b5563',
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { size: 11, weight: '500' }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+</script>
+{% endif %}

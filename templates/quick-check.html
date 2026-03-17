@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}Проверка позиций{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">🚀 Проверка позиций сайта</h1>
+<!-- Передаем значение max_queries через data-атрибут -->
+<div id="config" data-max-queries="{{ max_queries }}" class="hidden"></div>
+
+<form id="parserForm" method="POST" action="/run" class="space-y-4" data-estimate-url="/estimate-limits-parser"
+    data-start-url="/run" data-redirect-url="{{ url_for('main.show_results') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div>
+        <label for="engine" class="block mb-2">Поисковая система:</label>
+        <select name="engine" id="engine" onchange="toggleYandexOptions()"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+            <option value="yandex">Yandex</option>
+            <option value="google">Google</option>
+        </select>
+    </div>
+
+    <div id="yandexOptions" class="hidden mt-4">
+        <label for="yandex_type" class="block mb-2">Тип поиска в Яндексе:</label>
+        <select name="yandex_type" id="yandex_type"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+            <option value="search_api">Search API (Топ-100)</option>
+            <option value="live_search">Живой поиск (Топ-10, 20, 30, 50, 100)</option>
+        </select>
+
+        <div id="yandex-page-limit-options" class="mt-2 hidden">
+            <label for="yandex_page_limit" class="block mb-2">Глубина проверки (страниц):</label>
+            <input type="number" id="yandex_page_limit" name="yandex_page_limit" value="10" min="1" max="100"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">ТОП-10 укажите 1, для Топ-100 — 10</p>
+        </div>
+    </div>
+
+    <div id="google-page-limit-options" class="mt-2 hidden">
+        <label for="google_page_limit" class="block mb-2">Глубина проверки (страниц):</label>
+        <input type="number" id="google_page_limit" name="google_page_limit" value="10" min="1" max="100"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">ТОП-10 укажите 1, для Топ-100 — 10</p>
+    </div>
+
+    <div id="location-options" class="mt-4 hidden">
+        <label for="loc_id" class="block mb-2">Локация:</label>
+        <div id="google-location-wrapper">
+            <select name="loc_id_google" id="location-select-google"></select>
+        </div>
+        <div id="yandex-location-wrapper" class="hidden">
+            <select name="loc_id_yandex" id="location-select-yandex"></select>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <label for="queries" class="block mb-2">Поисковые фразы (по одной на строку):</label>
+        <div id="maxQueriesWarning" class="text-yellow-500 text-sm mb-1"></div>
+        <textarea name="queries" id="queries" rows="5" placeholder="Введите поисковые фразы..."
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 focus:outline-none"
+            required></textarea>
+        <div id="queriesCount" class="text-sm mt-1">Фраз: 0</div>
+    </div>
+    <div class="mt-4">
+        <label for="domain" class="block mb-2">Ссылка на сайт:</label>
+        <input type="text" name="domain" id="domain" placeholder="https://example.com" autocomplete="off"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 leading-tight focus:outline-none focus:shadow-outline"
+            required>
+    </div>
+    <button type="submit" id="runButton" class="action-btn-1">Запустить парсинг</button>
+</form>
+
+<div id="statusDiv" class="hidden mt-5">
+    <h3 class="text-xl font-bold mb-2">Статус парсинга:</h3>
+    <div id="progressBar" class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+        <div id="progressFill" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+    </div>
+    <p id="statusText" class="mt-2">Инициализация...</p>
+    <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        Потрачено лимитов: <span id="spentLimits">0</span>
+    </div>
+    <button id="viewResultsBtn"
+        class="hidden mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Посмотреть
+        результаты</button>
+</div>
+
+
+<!-- Оверлей и модальное окно -->
+<div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center">
+    <div class="loader"></div> <!-- Простой CSS-лоадер -->
+</div>
+
+<div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 id="modal-title" class="text-xl font-bold mb-4">Подтверждение</h2>
+        <p id="modal-text" class="mb-6">Текст сообщения...</p>
+        <div class="flex justify-end space-x-4">
+            <button id="modal-cancel"
+                class="px-4 py-2 bg-gray-300 dark:bg-gray-600 rounded hover:bg-gray-400 dark:hover:bg-gray-500">Отмена</button>
+            <button id="modal-confirm"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Подтвердить</button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/form_handler.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='js/custom-select.js') }}"></script> -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleYandexOptions();
+
+        new CustomSelect('#location-select-google', {
+            apiUrl: '/api/locations',
+            placeholder: 'Выберите локацию для Google'
+        }).setDefault(20949, 'Moscow,Moscow,Russia');
+
+        new CustomSelect('#location-select-yandex', {
+            apiUrl: '/api/yandex-regions',
+            placeholder: 'Выберите регион для Яндекса'
+        }).setDefault(213, 'Москва');
+
+        const queriesTextarea = document.getElementById('queries');
+        const queriesCountDiv = document.getElementById('queriesCount');
+        const maxQueriesWarningDiv = document.getElementById('maxQueriesWarning');
+        const configElement = document.getElementById('config');
+        const maxQueries = parseInt(configElement.dataset.maxQueries) || 5;
+
+        maxQueriesWarningDiv.innerText = `Максимум ${maxQueries} фраз. Лишние фразы будут проигнорированы.`;
+
+        queriesTextarea.addEventListener('input', function () {
+            const lines = this.value.split('\n');
+            const nonEmptyLines = lines.filter(line => line.trim() !== '');
+            const count = nonEmptyLines.length;
+
+            if (count > maxQueries) {
+                const trimmedLines = nonEmptyLines.slice(0, maxQueries);
+                this.value = trimmedLines.join('\n');
+                queriesCountDiv.innerHTML = `<span style="color: red;">Фраз: ${maxQueries} (достигнут лимит)</span>`;
+            } else {
+                queriesCountDiv.innerText = `Фраз: ${count}`;
+            }
+        });
+
+        document.getElementById('engine').addEventListener('change', toggleYandexOptions);
+        document.getElementById('yandex_type').addEventListener('change', toggleYandexOptions);
+    });
+
+    function toggleYandexOptions() {
+        const engine = document.getElementById('engine').value;
+        const yandexOptions = document.getElementById('yandexOptions');
+        const yandexType = document.getElementById('yandex_type').value;
+        const yandexPageLimitOptions = document.getElementById('yandex-page-limit-options');
+        const googlePageLimitOptions = document.getElementById('google-page-limit-options');
+        const googleLocationWrapper = document.getElementById('google-location-wrapper');
+        const yandexLocationWrapper = document.getElementById('yandex-location-wrapper');
+        const locationOptions = document.getElementById('location-options');
+
+        if (engine === 'yandex') {
+            yandexOptions.classList.remove('hidden');
+            locationOptions.classList.remove('hidden');
+            googleLocationWrapper.classList.add('hidden');
+            yandexLocationWrapper.classList.remove('hidden');
+            if (yandexType === 'live_search') {
+                yandexPageLimitOptions.classList.remove('hidden');
+            } else {
+                yandexPageLimitOptions.classList.add('hidden');
+            }
+        } else if (engine === 'google') {
+            yandexOptions.classList.add('hidden');
+            yandexPageLimitOptions.classList.add('hidden');
+            googlePageLimitOptions.classList.remove('hidden');
+            locationOptions.classList.remove('hidden');
+            googleLocationWrapper.classList.remove('hidden');
+            yandexLocationWrapper.classList.add('hidden');
+        } else {
+            yandexOptions.classList.add('hidden');
+            yandexPageLimitOptions.classList.add('hidden');
+            googlePageLimitOptions.classList.add('hidden');
+            locationOptions.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}

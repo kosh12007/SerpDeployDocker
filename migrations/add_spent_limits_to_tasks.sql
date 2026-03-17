@@ -1,0 +1,1 @@
+ALTER TABLE top_sites_tasks ADD COLUMN spent_limits INT DEFAULT 0;

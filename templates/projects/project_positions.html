@@ -1,0 +1,1091 @@
+{% extends "layout.html" %}
+
+{% block title %}Проверка позиций: {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Проверка позиций: {{ project.name }}</h1>
+
+    <div class="mb-4" {% if active_session %}data-active-session-id="{{ active_session.id }}"
+        data-active-session-status="{{ active_session.status }}" {% endif %}>
+        <h2 class="text-xl font-semibold mb-2">Запуск парсинга позиций</h2>
+        <div class="flex items-center space-x-4">
+            <select id="parsing-variant-select"
+                class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-20 border-gray-300 dark:border-gray-600">
+                {% for variant in variants %}
+                <option value="{{ variant.id }}">{{ variant.full_text }}</option>
+                {% endfor %}
+            </select>
+            <button id="start-parsing-btn"
+                class="bg-blue-500 dark:bg-dark-button-bg hover:bg-blue-700 dark:hover:bg-dark-button-hover-bg text-white font-bold py-2 px-4 rounded">
+                Запустить парсинг
+            </button>
+            <button id="retry-failed-parsing-btn"
+                class="bg-yellow-500 dark:bg-yellow-700 hover:bg-yellow-600 dark:hover:bg-yellow-800 text-white font-bold py-2 px-4 rounded"
+                title="Перезапустить парсинг для запросов с ошибками">
+                Повторить ошибочные
+            </button>
+        </div>
+
+        <!-- Блок отображения статуса парсинга -->
+        <div id="parsing-status-container" class="mt-4 hidden">
+            <div class="bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-3">
+                        <div id="parsing-status-spinner"
+                            class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                        <span id="parsing-status-text" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Парсинг выполняется...
+                        </span>
+                    </div>
+                    <button id="hide-status-btn"
+                        class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                    <div id="parsing-progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style="width: 0%"></div>
+                </div>
+                <div id="parsing-status-details" class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                    <span id="parsing-spent-limits">Потрачено лимитов: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4 flex space-x-4">
+        <div id="group-filter-select"
+            class="modal-trigger p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 cursor-pointer"
+            style="max-width: 200px;" data-target="group-filter-modal-content"
+            data-total-groups="{{ groups|length + 1 }}">
+            <span>Фильтр по группам</span>
+        </div>
+        <div id="date-filter-select"
+            class="modal-trigger p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 cursor-pointer"
+            style="max-width: 200px;" data-target="date-filter-modal-content">
+            <span>Фильтр по датам</span>
+        </div>
+    </div>
+    <div class="mb-8">
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+            <table id="positions-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr id="positions-table-header">
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Запросы</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider group-column">
+                            Группа</th>
+                        {% for date_str in dates %}
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            {{ date_str.split('-')|reverse|join('.') }}
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody id="positions-table-body"
+                    class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for query in queries %}
+                    <tr data-group="{{ query.group_name or 'Без группы' }}">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ query.query_text }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap group-column">{{ query.group_name or 'Без группы' }}</td>
+                        {% for date_str in dates %}
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% set pos_data = positions.get(query.id, {}).get(date_str) %}
+                            {% if pos_data and pos_data.status == 'error' %}
+                            <span class="text-red-500">Ошибка</span>
+                            {% else %}
+                            {{ pos_data.position if pos_data else '-' }}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ dates|length + 2 }}" class="px-6 py-4 text-center">Запросы не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Скрытый контент для модального окна фильтра "Группа" -->
+<div id="group-filter-modal-content" class="hidden">
+    <!-- <h3 class="text-lg font-semibold mb-4">Фильтр по группам</h3> -->
+    <div class="filter-options-modal space-y-2 max-h-[70vh] overflow-y-auto">
+        <h3 class="text-lg font-semibold mb-4">Фильтр по группам</h3>
+        <div>
+            <label class="flex items-center">
+                <input type="checkbox" id="group-filter-all" class="form-checkbox h-5 w-5 text-blue-600">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">Все</span>
+            </label>
+        </div>
+        <div>
+            <label class="flex items-center">
+                <input type="checkbox" id="group-filter-hide" class="form-checkbox h-5 w-5 text-blue-600">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">Скрыть колонку</span>
+            </label>
+        </div>
+        <hr class="my-2 border-gray-300 dark:border-gray-600">
+        {% for group in groups %}
+        <div>
+            <label class="flex items-center">
+                <input type="checkbox" id="group-{{ group }}" name="group_filter" value="{{ group }}"
+                    class="form-checkbox h-5 w-5 text-blue-600 group-filter-item">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">{{ group }}</span>
+            </label>
+        </div>
+        {% endfor %}
+        <div>
+            <label class="flex items-center">
+                <input type="checkbox" id="group-no-group" name="group_filter" value="Без группы"
+                    class="form-checkbox h-5 w-5 text-blue-600 group-filter-item">
+                <span class="ml-2 text-gray-700 dark:text-gray-300">Без группы</span>
+            </label>
+        </div>
+    </div>
+    <div class="mt-4 flex justify-end">
+        <button id="apply-group-filter"
+            class="bg-blue-500 dark:bg-dark-button-bg hover:bg-blue-700 dark:hover:bg-dark-button-hover-bg text-white dark:text-dark-button-text font-bold py-2 px-4 rounded">
+            Применить
+        </button>
+    </div>
+</div>
+
+<!-- Скрытый контент для модального окна фильтра "Дата" -->
+<div id="date-filter-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4">Фильтр по датам</h3>
+    <div id="calendar-container" class="calendar-container"></div>
+    <div class="mt-4 flex justify-end">
+        <button id="apply-date-filter"
+            class="bg-blue-500 dark:bg-dark-button-bg hover:bg-blue-700 dark:hover:bg-dark-button-hover-bg text-white dark:text-dark-button-text font-bold py-2 px-4 rounded">
+            Применить
+        </button>
+    </div>
+</div>
+
+
+<!-- Скрытый контент для модального окна запуска парсинга -->
+<div id="parsing-confirmation-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4" id="confirmation-modal-title"></h3>
+    <p class="mb-2" id="confirmation-modal-queries"></p>
+    <p class="mb-2" id="confirmation-modal-limits"></p>
+    <p class="mb-4" id="confirmation-modal-balance"></p>
+    <div class="modal-buttons">
+        <button id="modal-confirm-start-parsing" class="modal-button modal-button-confirm">
+            Подтвердить
+        </button>
+        <button id="modal-cancel-start-parsing" class="modal-button modal-button-cancel">
+            Отмена
+        </button>
+    </div>
+</div>
+
+<!-- Универсальное модальное окно -->
+<div id="universalModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div id="modalBody" class="mt-2 px-7 py-3">
+            <!-- Содержимое будет вставлено здесь -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/modal_logic_handler.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const projectId = '{{ project.id }}';
+        const groupFilterKey = `group_filter_${projectId}`;
+        const storageKey = `selected_variant_${projectId}`;
+        const dateFilterKey = `date_filter_${projectId}`;
+
+        const groupFilterSelect = document.getElementById('group-filter-select');
+        const dateFilterSelect = document.getElementById('date-filter-select');
+        const table = document.getElementById('positions-table');
+        const tableBody = document.getElementById('positions-table-body');
+        const variantSelect = document.getElementById('parsing-variant-select');
+        const startParsingBtn = document.getElementById('start-parsing-btn');
+        // --- Логика для модального окна фильтра ---
+        window.populateModalOptions = (targetId, container) => {
+            console.log('Шаг 1: populateModalOptions вызван с targetId:', targetId);
+
+            // Если контейнер не передан, пытаемся найти его в активном модальном окне
+            if (!container) {
+                const modal = document.getElementById('universalModal');
+                if (modal && modal.style.display !== 'none') {
+                    container = modal.querySelector('#modalBody');
+                }
+            }
+
+            // Если контейнер все еще не найден, выходим
+            if (!container) {
+                console.error('Контейнер для модального окна не найден!');
+                return;
+            }
+
+            if (targetId === 'group-filter-modal-content') {
+                const contentTemplate = document.getElementById(targetId);
+                if (contentTemplate) {
+                    console.log('Шаг 2: Найден шаблон для фильтра групп');
+                    const clonedContent = contentTemplate.cloneNode(true);
+                    clonedContent.classList.remove('hidden');
+                    container.innerHTML = '';
+                    container.appendChild(clonedContent);
+                    setupGroupFilterLogic(container);
+                    console.log('Шаг 3: setupGroupFilterLogic вызван');
+                }
+            } else if (targetId === 'date-filter-modal-content') {
+                const contentTemplate = document.getElementById(targetId);
+                if (contentTemplate) {
+                    console.log('Шаг 2: Найден шаблон для фильтра дат');
+                    const clonedContent = contentTemplate.cloneNode(true);
+                    clonedContent.classList.remove('hidden');
+                    container.innerHTML = '';
+                    container.appendChild(clonedContent);
+                    console.log('Шаг 3: Контент фильтра дат добавлен в контейнер');
+                    // Вызываем setupDateFilterLogic сразу же, без задержки
+                    console.log('Шаг 4: Вызов setupDateFilterLogic');
+                    setupDateFilterLogic(container);
+                } else {
+                    console.error('Шаг 2 (ошибка): Шаблон для фильтра дат не найден');
+                }
+            } else if (targetId === 'parsing-confirmation-modal-content') {
+                const contentTemplate = document.getElementById(targetId);
+                if (contentTemplate) {
+                    const clonedContent = contentTemplate.cloneNode(true);
+                    clonedContent.classList.remove('hidden');
+                    container.innerHTML = '';
+                    container.appendChild(clonedContent);
+                }
+            } else {
+                console.error('Шаг 1 (ошибка): Неизвестный targetId:', targetId);
+            }
+        };
+
+        function setupGroupFilterLogic(modalContainer) {
+            // Ищем кнопку в контейнере модального окна
+            const applyBtn = modalContainer.querySelector('#apply-group-filter');
+            const allCheckbox = modalContainer.querySelector('#group-filter-all');
+            const hideCheckbox = modalContainer.querySelector('#group-filter-hide');
+            const itemCheckboxes = modalContainer.querySelectorAll('.group-filter-item');
+
+            const savedState = JSON.parse(localStorage.getItem(groupFilterKey) || '{}');
+
+            itemCheckboxes.forEach(cb => {
+                cb.checked = !savedState.selectedGroups || savedState.selectedGroups.length === 0 || savedState.selectedGroups.includes(cb.value);
+            });
+            if (hideCheckbox) hideCheckbox.checked = savedState.hideColumn || false;
+
+            const checkSelectAll = () => {
+                const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                if (allCheckbox) allCheckbox.checked = allChecked;
+            };
+
+            checkSelectAll();
+
+            if (allCheckbox) {
+                allCheckbox.addEventListener('change', () => {
+                    itemCheckboxes.forEach(cb => cb.checked = allCheckbox.checked);
+                });
+            }
+
+            itemCheckboxes.forEach(cb => {
+                cb.addEventListener('change', checkSelectAll);
+            });
+
+            if (applyBtn) {
+                // Удаляем старые обработчики, чтобы избежать дублирования
+                const newApplyBtn = applyBtn.cloneNode(true);
+                applyBtn.parentNode.replaceChild(newApplyBtn, applyBtn);
+
+                newApplyBtn.addEventListener('click', () => {
+                    const selectedGroups = Array.from(itemCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+
+                    const hideColumn = hideCheckbox ? hideCheckbox.checked : false;
+
+                    const newState = { selectedGroups, hideColumn };
+                    localStorage.setItem(groupFilterKey, JSON.stringify(newState));
+
+                    // Получаем текущее состояние фильтра по датам из localStorage
+                    const dateFilterKey = `date_filter_${projectId}`;
+                    const currentDateState = JSON.parse(localStorage.getItem(dateFilterKey) || '{}');
+
+                    // Применяем оба фильтра
+                    applyFilterFromState(newState, currentDateState);
+
+                    if (window.universalModalInstance) {
+                        window.universalModalInstance.closeModal();
+                    }
+                });
+            }
+        }
+
+        function applyFilterFromState(state) {
+            const { selectedGroups, hideColumn } = state || { selectedGroups: [], hideColumn: false };
+
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const group = row.dataset.group;
+                row.style.display = (selectedGroups.length === 0 || selectedGroups.includes(group)) ? '' : 'none';
+            });
+
+            const groupColumns = table.querySelectorAll('.group-column');
+            groupColumns.forEach(col => {
+                col.style.display = hideColumn ? 'none' : '';
+            });
+
+            if (groupFilterSelect) {
+                const selectSpan = groupFilterSelect.querySelector('span');
+                const totalGroups = parseInt(groupFilterSelect.getAttribute('data-total-groups'), 10);
+                if (selectedGroups.length > 0 && selectedGroups.length < totalGroups) {
+                    selectSpan.textContent = `Выбрано групп: ${selectedGroups.length}`;
+                } else {
+                    selectSpan.textContent = 'Фильтр по группам (Все)';
+                }
+            }
+        }
+
+        // --- Логика для варианта парсинга ---
+        const savedVariantId = localStorage.getItem(storageKey);
+        if (savedVariantId && variantSelect) {
+            variantSelect.value = savedVariantId;
+        }
+
+        if (variantSelect) {
+            variantSelect.addEventListener('change', function () {
+                localStorage.setItem(storageKey, this.value);
+                const url = new URL(window.location.href);
+                url.searchParams.set('variant_id', this.value);
+                window.location.href = url.toString();
+            });
+        }
+
+        // Переменная для хранения ID интервала опроса статуса
+        let statusCheckInterval = null;
+        let currentTaskId = null;
+
+        // Функция для отображения статуса парсинга
+        function showParsingStatus(taskId) {
+            currentTaskId = taskId;
+            const statusContainer = document.getElementById('parsing-status-container');
+            const statusText = document.getElementById('parsing-status-text');
+            const statusSpinner = document.getElementById('parsing-status-spinner');
+            const progressBar = document.getElementById('parsing-progress-bar');
+            const spentLimits = document.getElementById('parsing-spent-limits');
+
+            if (statusContainer) {
+                statusContainer.classList.remove('hidden');
+            }
+
+            // Начинаем опрос статуса
+            checkTaskStatus(taskId);
+        }
+
+        // Функция для скрытия статуса
+        function hideParsingStatus() {
+            const statusContainer = document.getElementById('parsing-status-container');
+            if (statusContainer) {
+                statusContainer.classList.add('hidden');
+            }
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+                statusCheckInterval = null;
+            }
+            currentTaskId = null;
+        }
+
+        // Обработчик кнопки скрытия статуса
+        const hideStatusBtn = document.getElementById('hide-status-btn');
+        if (hideStatusBtn) {
+            hideStatusBtn.addEventListener('click', hideParsingStatus);
+        }
+
+        // Функция для обновления таблицы позиций через AJAX
+        function refreshPositionsTable() {
+            const projectId = '{{ project.id }}';
+            const variantId = variantSelect ? variantSelect.value : null;
+            let url = `/api/projects/${projectId}/positions-data`;
+            if (variantId) {
+                url += `?variant_id=${variantId}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.positions && data.dates) {
+                        updatePositionsTable(data.positions, data.dates, data.queries);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при обновлении таблицы позиций:', error);
+                });
+        }
+
+        // Функция для обновления таблицы позиций
+        function updatePositionsTable(positions, dates, queries) {
+            const tableHeader = document.getElementById('positions-table-header');
+            const tableBody = document.getElementById('positions-table-body');
+
+            if (!tableHeader || !tableBody) return;
+
+            // Обновляем заголовки таблицы (даты)
+            // Удаляем все заголовки кроме первых двух (Запросы и Группа)
+            const headerCells = tableHeader.querySelectorAll('th');
+            if (headerCells.length > 2) {
+                for (let i = headerCells.length - 1; i >= 2; i--) {
+                    headerCells[i].remove();
+                }
+            }
+
+            // Добавляем новые заголовки с датами
+            dates.forEach(dateStr => {
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider';
+                th.textContent = dateStr.split('-').reverse().join('.');
+                tableHeader.appendChild(th);
+            });
+
+            // Обновляем тело таблицы
+            tableBody.innerHTML = '';
+
+            if (queries && queries.length > 0) {
+                queries.forEach(query => {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-group', query.group_name || 'Без группы');
+
+                    // Ячейка с текстом запроса
+                    const queryTd = document.createElement('td');
+                    queryTd.className = 'px-6 py-4 whitespace-nowrap';
+                    queryTd.textContent = query.query_text;
+                    tr.appendChild(queryTd);
+
+                    // Ячейка с группой
+                    const groupTd = document.createElement('td');
+                    groupTd.className = 'px-6 py-4 whitespace-nowrap group-column';
+                    groupTd.textContent = query.group_name || 'Без группы';
+                    tr.appendChild(groupTd);
+
+                    // Ячейки с позициями по датам
+                    dates.forEach(dateStr => {
+                        const positionTd = document.createElement('td');
+                        positionTd.className = 'px-6 py-4 whitespace-nowrap';
+                        const positionData = positions[query.id] && positions[query.id][dateStr];
+                        if (positionData && typeof positionData === 'object') {
+                            // Новый формат: { position: ..., status: ... }
+                            const position = positionData.position;
+                            const status = positionData.status;
+                            positionTd.textContent = position !== undefined ? position : '-';
+                            // Добавляем класс в зависимости от статуса
+                            if (status === 'error') {
+                                positionTd.classList.add('text-red-100', 'dark:text-red-900');
+                            } else if (status === 'success') {
+                                // Можно добавить класс для успешного статуса, если нужно
+                                // positionTd.classList.add('bg-green-100');
+                            }
+                            // Добавляем data-атрибут для статуса, если потребуется в JS позже
+                            positionTd.setAttribute('data-status', status);
+                        } else {
+                            // Старый формат или отсутствие данных
+                            positionTd.textContent = positionData !== undefined ? positionData : '-';
+                        }
+                        tr.appendChild(positionTd);
+                    });
+
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = dates.length + 2;
+                td.className = 'px-6 py-4 text-center';
+                td.textContent = 'Запросы не найдены.';
+                tr.appendChild(td);
+                tableBody.appendChild(tr);
+            }
+
+            // Применяем фильтры после обновления таблицы
+            const initialState = JSON.parse(localStorage.getItem(groupFilterKey));
+            if (initialState) {
+                applyFilterFromState(initialState);
+            }
+        }
+
+        function checkTaskStatus(taskId) {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+
+            statusCheckInterval = setInterval(() => {
+                fetch(`/api/parsing-status/${taskId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusText = document.getElementById('parsing-status-text');
+                        const statusSpinner = document.getElementById('parsing-status-spinner');
+                        const progressBar = document.getElementById('parsing-progress-bar');
+                        const spentLimits = document.getElementById('parsing-spent-limits');
+
+                        if (!data.success) {
+                            console.error('Ошибка получения статуса:', data.message);
+                            return;
+                        }
+
+                        const status = data.status;
+                        const spent = data.spent_limits || 0;
+
+                        // Обновляем отображение статуса
+                        if (statusText) {
+                            const statusMessages = {
+                                'pending': 'Ожидание запуска парсинга...',
+                                'in_progress': 'Парсинг выполняется...',
+                                'completed': 'Парсинг успешно завершен!',
+                                'error': 'Произошла ошибка при парсинге',
+                                'partial': 'Парсинг завершен частично'
+                            };
+                            statusText.textContent = statusMessages[status] || 'Неизвестный статус';
+                        }
+
+                        if (spentLimits) {
+                            spentLimits.textContent = `Потрачено лимитов: ${spent}`;
+                        }
+
+                        // Обновляем прогресс-бар
+                        if (progressBar) {
+                            if (status === 'completed' || status === 'error' || status === 'partial') {
+                                progressBar.style.width = '100%';
+                                if (status === 'completed') {
+                                    progressBar.className = 'bg-green-600 h-2 rounded-full transition-all duration-300';
+                                } else if (status === 'error') {
+                                    progressBar.className = 'bg-red-600 h-2 rounded-full transition-all duration-300';
+                                } else {
+                                    progressBar.className = 'bg-yellow-600 h-2 rounded-full transition-all duration-300';
+                                }
+                            } else if (status === 'in_progress') {
+                                progressBar.style.width = '50%';
+                                progressBar.className = 'bg-blue-600 h-2 rounded-full transition-all duration-300';
+                            } else {
+                                progressBar.style.width = '10%';
+                            }
+                        }
+
+                        // Обработка завершенных статусов
+                        if (status === 'completed' || status === 'partial') {
+                            clearInterval(statusCheckInterval);
+                            statusCheckInterval = null;
+
+                            if (statusSpinner) {
+                                statusSpinner.classList.remove('animate-spin');
+                                statusSpinner.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                            }
+
+                            // Обновляем таблицу позиций
+                            refreshPositionsTable();
+
+                            Toastify({
+                                text: status === 'completed' ? "Парсинг успешно завершен. Таблица обновлена." : "Парсинг завершен частично. Таблица обновлена.",
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                style: { background: status === 'completed' ? "#10B981" : "#F59E0B" },
+                            }).showToast();
+
+                            // Автоматически скрываем статус через 5 секунд
+                            setTimeout(() => {
+                                hideParsingStatus();
+                            }, 5000);
+
+                        } else if (status === 'error') {
+                            clearInterval(statusCheckInterval);
+                            statusCheckInterval = null;
+
+                            if (statusSpinner) {
+                                statusSpinner.classList.remove('animate-spin');
+                                statusSpinner.innerHTML = '<svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                            }
+
+                            Toastify({
+                                text: data.message || "Произошла ошибка при парсинге.",
+                                duration: 5000,
+                                gravity: "top",
+                                position: "right",
+                                style: { background: "#EF4444" },
+                            }).showToast();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при проверке статуса задачи:', error);
+                        clearInterval(statusCheckInterval);
+                        statusCheckInterval = null;
+                        Toastify({
+                            text: "Не удалось проверить статус задачи.",
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            style: { background: "#EF4444" },
+                        }).showToast();
+                    });
+            }, 2000); // Опрашиваем каждые 2 секунды
+        }
+
+
+
+        if (startParsingBtn) {
+            startParsingBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const variantId = variantSelect.value;
+                if (!variantId) {
+                    Toastify({ text: "Пожалуйста, выберите вариант парсинга.", duration: 300, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                    return;
+                }
+
+                fetch(`/api/projects/{{ project.id }}/estimate-limits?variant_id=${variantId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.estimated_cost !== undefined && data.user_balance !== undefined) {
+                            // Гарантированно скрываем блок статуса перед открытием модального окна
+                            hideParsingStatus();
+                            // hideParsingStatus();
+
+                            // Используем новый обработчик для вставки контента
+                            if (window.universalModalInstance) {
+                                window.universalModalInstance.openModal('parsing-confirmation-modal-content', (modal) => {
+                                    // Заполняем данными
+                                    modal.querySelector('#confirmation-modal-title').textContent = "Подтверждение запуска парсинга";
+                                    modal.querySelector('#confirmation-modal-queries').textContent = `Будет запущена проверка для ${data.queries_count} запросов.`;
+                                    modal.querySelector('#confirmation-modal-limits').textContent = `Будет списано примерно ${data.estimated_cost} лимитов.`;
+                                    modal.querySelector('#confirmation-modal-balance').textContent = `Текущий баланс: ${data.user_balance} лимитов.`;
+
+                                    // Навешиваем обработчики на кнопки внутри модального окна
+                                    const confirmBtn = modal.querySelector('#modal-confirm-start-parsing');
+                                    const cancelBtn = modal.querySelector('#modal-cancel-start-parsing');
+
+                                    if (confirmBtn) {
+                                        const newConfirmBtn = confirmBtn.cloneNode(true);
+                                        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                                        newConfirmBtn.addEventListener('click', function () {
+                                            const variantId = variantSelect.value;
+                                            fetch(`/api/projects/{{ project.id }}/parse-positions`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                                },
+                                                body: JSON.stringify({ variant_id: variantId })
+                                            })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success && data.task_id) {
+                                                        window.universalModalInstance.closeModal();
+                                                        Toastify({ text: "Парсинг запущен.", duration: 3000, gravity: "top", position: "right", style: { background: "#3B82F6" } }).showToast();
+                                                        showParsingStatus(data.task_id);
+                                                    } else {
+                                                        const errorMessage = data.message || data.error || "Не удалось запустить парсинг.";
+                                                        Toastify({ text: errorMessage, duration: 3000, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.error('Ошибка при запуске парсинга:', error);
+                                                    Toastify({ text: "Критическая ошибка при запуске парсинга.", duration: 3000, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                                                });
+                                        });
+                                    }
+
+                                    if (cancelBtn) {
+                                        cancelBtn.addEventListener('click', () => window.universalModalInstance.closeModal());
+                                    }
+                                });
+                            }
+                        } else {
+                            Toastify({
+                                text: data.error || "Не удалось получить данные для подтверждения.",
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                style: { background: "#EF444" },
+                            }).showToast();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        Toastify({
+                            text: "Произошла ошибка при получении данных.",
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            style: { background: "#EF4444" },
+                        }).showToast();
+                    });
+            });
+        }
+
+        // Первоначальная загрузка состояния фильтра
+        const initialState = JSON.parse(localStorage.getItem(groupFilterKey));
+        if (initialState) {
+            applyFilterFromState(initialState);
+        } else {
+            const allGroups = Array.from(document.querySelectorAll('.group-filter-item')).map(cb => cb.value);
+            const defaultState = { selectedGroups: allGroups, hideColumn: false };
+            localStorage.setItem(groupFilterKey, JSON.stringify(defaultState));
+            applyFilterFromState(defaultState);
+        }
+
+        // Проверяем наличие активной задачи при загрузке страницы
+        const mb4Container = document.querySelector('.mb-4[data-active-session-id]');
+        if (mb4Container) {
+            const activeSessionId = parseInt(mb4Container.getAttribute('data-active-session-id'));
+            const activeSessionStatus = mb4Container.getAttribute('data-active-session-status');
+
+            if (activeSessionStatus === 'pending' || activeSessionStatus === 'in_progress') {
+                showParsingStatus(activeSessionId);
+            }
+        }
+        // Регистрация обработчиков для модальных окон
+        if (window.modalLogicHandler) {
+            window.modalLogicHandler.registerHandler('group-filter-modal-content', setupGroupFilterLogic);
+            window.modalLogicHandler.registerHandler('date-filter-modal-content', setupDateFilterLogic);
+
+            // Регистрируем новый обработчик для модального окна подтверждения парсинга
+            window.modalLogicHandler.registerHandler('parsing-confirmation-modal-content', (modalContainer) => {
+                // Логика для кнопок подтверждения и отмены теперь будет настраиваться здесь,
+                // если она станет сложнее. Пока что `modal.js` справляется.
+            });
+        }
+
+
+        // --- Логика для кнопки "Повторить ошибочные" ---
+        const retryFailedBtn = document.getElementById('retry-failed-parsing-btn');
+
+        if (retryFailedBtn) {
+            retryFailedBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Показываем модальное окно подтверждения
+                if (window.universalModalInstance) {
+                    window.universalModalInstance.openModal('parsing-confirmation-modal-content', (modal) => {
+                        // Заполняем заголовок и текст подтверждения для повторного парсинга
+                        modal.querySelector('#confirmation-modal-title').textContent = "Подтверждение повторного парсинга ошибочных запросов";
+
+                        // Здесь можно уточнить количество ошибочных запросов, если будет доступна такая информация
+                        modal.querySelector('#confirmation-modal-queries').textContent = `Будет запущена проверка для ошибочных запросов.`;
+
+                        // Оценка лимитов для повторного парсинга может быть другой, но пока используем тот же эндпоинт
+                        const variantId = variantSelect.value;
+                        if (!variantId) {
+                            Toastify({ text: "Пожалуйста, выберите вариант парсинга.", duration: 300, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                            window.universalModalInstance.closeModal();
+                            return;
+                        }
+
+                        fetch(`/api/projects/{{ project.id }}/estimate-retry-limits?variant_id=${variantId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    if (data.queries_count === 0) {
+                                        Toastify({ text: "Не найдено запросов с ошибками для повторного парсинга.", duration: 3000, gravity: "top", position: "right", style: { background: "#F59E0B" } }).showToast();
+                                        window.universalModalInstance.closeModal();
+                                        return;
+                                    }
+
+                                    hideParsingStatus();
+
+                                    modal.querySelector('#confirmation-modal-queries').textContent = `Будет запущена проверка для ${data.queries_count} ошибочных запросов.`;
+                                    modal.querySelector('#confirmation-modal-limits').textContent = `Будет списано примерно ${data.estimated_cost} лимитов.`;
+                                    modal.querySelector('#confirmation-modal-balance').textContent = `Текущий баланс: ${data.user_balance} лимитов.`;
+
+                                    // Навешиваем обработчики на кнопки внутри модального окна
+                                    const confirmBtn = modal.querySelector('#modal-confirm-start-parsing');
+                                    const cancelBtn = modal.querySelector('#modal-cancel-start-parsing');
+
+                                    if (confirmBtn) {
+                                        const newConfirmBtn = confirmBtn.cloneNode(true);
+                                        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+                                        newConfirmBtn.addEventListener('click', function () {
+                                            // Отправляем запрос на повторный парсинг ошибочных запросов
+                                            // Важно: используем новый эндпоинт
+                                            fetch(`/api/projects/{{ project.id }}/retry-failed-positions`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                                },
+                                                body: JSON.stringify({ variant_id: variantId }) // Передаем variant_id, так как он используется для новых сессий
+                                            })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success && data.task_id) {
+                                                        window.universalModalInstance.closeModal();
+                                                        Toastify({ text: "Повторный парсинг ошибочных запросов запущен.", duration: 3000, gravity: "top", position: "right", style: { background: "#3B82F6" } }).showToast();
+                                                        showParsingStatus(data.task_id);
+                                                    } else {
+                                                        const errorMessage = data.message || data.error || "Не удалось запустить повторный парсинг.";
+                                                        Toastify({ text: errorMessage, duration: 3000, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                                                    }
+                                                })
+                                                .catch(error => {
+                                                    console.error('Ошибка при запуске повторного парсинга:', error);
+                                                    Toastify({ text: "Критическая ошибка при запуске повторного парсинга.", duration: 3000, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                                                });
+                                        });
+                                    }
+
+                                    if (cancelBtn) {
+                                        cancelBtn.addEventListener('click', () => window.universalModalInstance.closeModal());
+                                    }
+                                } else {
+                                    Toastify({
+                                        text: data.message || "Не удалось получить данные для подтверждения.",
+                                        duration: 3000,
+                                        gravity: "top",
+                                        position: "right",
+                                        style: { background: "#EF4444" },
+                                    }).showToast();
+                                    window.universalModalInstance.closeModal();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Ошибка при оценке лимитов для повторного парсинга:', error);
+                                Toastify({
+                                    text: "Произошла ошибка при получении данных для повторного парсинга.",
+                                    duration: 3000,
+                                    gravity: "top",
+                                    position: "right",
+                                    style: { background: "#EF4444" },
+                                }).showToast();
+                                window.universalModalInstance.closeModal();
+                            });
+                    });
+                } else {
+                    // Если модальное окно недоступно, просто отправляем запрос
+                    const variantId = variantSelect.value;
+                    if (!variantId) {
+                        Toastify({ text: "Пожалуйста, выберите вариант парсинга.", duration: 300, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                        return;
+                    }
+
+                    fetch(`/api/projects/{{ project.id }}/retry-failed-positions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ variant_id: variantId })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.task_id) {
+                                Toastify({ text: "Повторный парсинг ошибочных запросов запущен.", duration: 3000, gravity: "top", position: "right", style: { background: "#3B82F6" } }).showToast();
+                                showParsingStatus(data.task_id);
+                            } else {
+                                const errorMessage = data.message || data.error || "Не удалось запустить повторный парсинг.";
+                                Toastify({ text: errorMessage, duration: 3000, gravity: "top", position: "right", style: { background: "#EF444" } }).showToast();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при запуске повторного парсинга:', error);
+                            Toastify({ text: "Критическая ошибка при запуске повторного парсинга.", duration: 3000, gravity: "top", position: "right", style: { background: "#EF4444" } }).showToast();
+                        });
+                }
+            });
+        }
+    });
+</script>
+<script>
+    function setupDateFilterLogic(modalContainer) {
+        const calendarContainer = modalContainer.querySelector('#calendar-container');
+        const applyBtn = modalContainer.querySelector('#apply-date-filter');
+        const projectId = '{{ project.id }}';
+        const dateFilterKey = `date_filter_${projectId}`;
+        const savedState = JSON.parse(localStorage.getItem(dateFilterKey) || '{}');
+        const variantSelect = document.getElementById('parsing-variant-select');
+        const variantId = variantSelect ? variantSelect.value : null;
+
+        // Функция для форматирования даты без учета часового пояса
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        fetch(`/api/projects/${projectId}/available-dates?variant_id=${variantId}`)
+            .then(response => response.json())
+            .then(availableDates => {
+                calendarContainer.innerHTML = ''; // Очищаем перед новой инициализацией
+                const flatpickrInstance = flatpickr(calendarContainer, {
+                    mode: "multiple",
+                    inline: true,
+                    dateFormat: "Y-m-d",
+                    defaultDate: savedState.selectedDates || [],
+                    locale: "ru",
+                    enable: availableDates,
+                    clickOpens: false,
+                    onDayCreate: function (dObj, dStr, fp, dayElem) {
+                        dayElem.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            const clickedDate = dayElem.dateObj;
+
+                            // Проверяем, кликаем ли мы по уже выбранной дате
+                            const clickedDateFormatted = formatDate(clickedDate);
+                            const isAlreadySelected = fp.selectedDates.some(date => formatDate(date) === clickedDateFormatted);
+
+                            if (isAlreadySelected) {
+                                // Если дата уже выбрана, удаляем её
+                                fp.setDate(fp.selectedDates.filter(d => d.getTime() !== clickedDate.getTime()), true);
+                                return;
+                            }
+
+                            // Если это первый клик в сессии выбора периода (или после сохранения)
+                            if (!fp.__rangeStart) {
+                                fp.__rangeStart = clickedDate;
+                                fp.setDate([clickedDate], true); // Выбираем только начальную дату
+                            } else {
+                                // Второй клик - определяем начало и конец периода
+                                let start = fp.__rangeStart;
+                                let end = clickedDate;
+                                if (start > end) [start, end] = [end, start]; // Меняем местами, если нужно
+
+                                // Получаем все даты в диапазоне
+                                const datesToAdd = [];
+                                let currentDate = new Date(start);
+                                while (currentDate <= end) {
+                                    datesToAdd.push(new Date(currentDate));
+                                    currentDate.setDate(currentDate.getDate() + 1);
+                                }
+
+                                // Объединяем с уже выбранными датами
+                                const allSelectedDates = new Set(fp.selectedDates.map(d => d.getTime()));
+                                datesToAdd.forEach(d => allSelectedDates.add(d.getTime()));
+                                const newSelectedDates = Array.from(allSelectedDates).map(time => new Date(time));
+
+                                fp.setDate(newSelectedDates, true);
+
+                                // Сбрасываем начальную точку для следующего периода
+                                fp.__rangeStart = null;
+                            }
+                        });
+                    }
+                });
+
+                const newApplyBtn = applyBtn.cloneNode(true);
+                applyBtn.parentNode.replaceChild(newApplyBtn, applyBtn);
+
+                newApplyBtn.addEventListener('click', () => {
+                    const selectedDates = flatpickrInstance.selectedDates.map(date => formatDate(date));
+                    const newState = { selectedDates };
+                    localStorage.setItem(dateFilterKey, JSON.stringify(newState));
+
+                    const groupFilterKey = `group_filter_${projectId}`;
+                    const groupState = JSON.parse(localStorage.getItem(groupFilterKey) || '{}');
+
+                    applyFilterFromState(groupState, newState);
+
+                    if (window.universalModalInstance) {
+                        window.universalModalInstance.closeModal();
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка при получении доступных дат:', error);
+            });
+    }
+
+    function applyFilterFromState(groupState, dateState) {
+        const table = document.getElementById('positions-table');
+        const tableBody = document.getElementById('positions-table-body');
+        const groupFilterSelect = document.getElementById('group-filter-select');
+        const dateFilterSelect = document.getElementById('date-filter-select');
+        const { selectedGroups, hideColumn } = groupState || { selectedGroups: [], hideColumn: false };
+        const { selectedDates } = dateState || { selectedDates: [] };
+
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            const group = row.dataset.group;
+            row.style.display = (selectedGroups.length === 0 || selectedGroups.includes(group)) ? '' : 'none';
+        });
+
+        const groupColumns = table.querySelectorAll('.group-column');
+        groupColumns.forEach(col => {
+            col.style.display = hideColumn ? 'none' : '';
+        });
+
+        const headerCells = table.querySelectorAll('thead th');
+        const bodyRows = table.querySelectorAll('tbody tr');
+
+        headerCells.forEach((th, index) => {
+            if (index > 1) { // Skip "Запросы" and "Группа"
+                const date = th.textContent.trim().split('.').reverse().join('-');
+                const shouldShow = selectedDates.length === 0 || selectedDates.includes(date);
+                th.style.display = shouldShow ? '' : 'none';
+            }
+        });
+
+        bodyRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            cells.forEach((cell, index) => {
+                if (index > 1) { // Skip "Запросы" and "Группа"
+                    const th = headerCells[index];
+                    const shouldShow = th.style.display !== 'none';
+                    cell.style.display = shouldShow ? '' : 'none';
+
+                    // Восстанавливаем классы подсветки статуса после фильтрации
+                    // Предполагаем, что data-status был установлен ранее
+                    const status = cell.getAttribute('data-status');
+                    if (status === 'error') {
+                        cell.classList.add('bg-red-100', 'dark:bg-red-900');
+                    } else {
+                        // Убираем классы ошибки, если статус не 'error'
+                        cell.classList.remove('bg-red-100', 'dark:bg-red-900');
+                    }
+                }
+            });
+        });
+
+        if (groupFilterSelect) {
+            const selectSpan = groupFilterSelect.querySelector('span');
+            const totalGroups = parseInt(groupFilterSelect.getAttribute('data-total-groups'), 10);
+            if (selectedGroups.length > 0 && selectedGroups.length < totalGroups) {
+                selectSpan.textContent = `Выбрано групп: ${selectedGroups.length}`;
+            } else {
+                selectSpan.textContent = 'Фильтр по группам (Все)';
+            }
+        }
+
+        if (dateFilterSelect) {
+            const selectSpan = dateFilterSelect.querySelector('span');
+            if (selectedDates.length > 0) {
+                selectSpan.textContent = `Выбрано дат: ${selectedDates.length}`;
+            } else {
+                selectSpan.textContent = 'Фильтр по датам (Все)';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const projectId = '{{ project.id }}';
+        const groupFilterKey = `group_filter_${projectId}`;
+        const dateFilterKey = `date_filter_${projectId}`;
+        const tableBody = document.getElementById('positions-table-body');
+
+        const initialGroupState = JSON.parse(localStorage.getItem(groupFilterKey));
+        const initialDateState = JSON.parse(localStorage.getItem(dateFilterKey));
+        if (initialGroupState || initialDateState) {
+            applyFilterFromState(initialGroupState, initialDateState);
+        }
+    });
+</script>
+{% endblock %}

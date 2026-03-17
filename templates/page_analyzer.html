@@ -1,0 +1,369 @@
+{% extends "layout.html" %}
+
+{% block title %}Анализатор страниц - SEO орбита{% endblock %}
+{% block meta_description %}Комплексный анализ страниц: Title, Description, H1-H6, объем текста и технические параметры
+в одном отчете.{% endblock %}
+{% block meta_keywords %}анализ страницы, аудит тегов, проверка Title и Description, SEO аудит страницы{% endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Анализатор страниц</h1>
+
+
+
+{% set info_content %}
+<p>Этот инструмент позволяет массово анализировать веб-страницы для извлечения ключевых SEO-параметров.</p>
+<ol class="list-decimal list-inside mt-2">
+    <li><strong>Ввод URL:</strong> Вставьте список URL для анализа, каждый с новой строки.</li>
+    <li><strong>Анализ:</strong> Инструмент собирает данные о тегах, заголовках, H1-H6, объеме текста и LSI-ключах.</li>
+    <li><strong>Результаты:</strong> Данные представляются в виде таблицы. Вы можете раскрывать детали по каждой
+        странице, а также выгружать полные отчеты в форматах XLSX, CSV или TXT.</li>
+    <li><strong>Создание ТЗ:</strong> Вы можете выбрать несколько страниц из результатов анализа и на их основе
+        автоматически создать техническое задание (ТЗ) на написание текста.</li>
+</ol>
+{% endset %}
+{{ render_info_block("Описание функционала", info_content, id_prefix='page-analyzer-info') }}
+
+
+<form id="analyzerForm" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div>
+        <label for="urls" class="block mb-2">URL для анализа (каждый с новой строки):</label>
+        <textarea name="urls" id="urls" rows="5" placeholder="https://example.com&#10;https://another-example.com"
+            class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+            required></textarea>
+    </div>
+    <button type="submit" id="analyzeButton"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Анализировать</button>
+</form>
+
+<div id="statusDiv" class="hidden mt-5">
+    <h3 class="text-xl font-bold mb-2">Статус анализа:</h3>
+    <div id="progressBar" class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+        <div id="progressFill" class="bg-green-500 h-4 rounded-full" style="width: 0%"></div>
+    </div>
+    <p id="statusText" class="mt-2">Инициализация...</p>
+</div>
+
+<div class="container mx-auto py-8">
+    <h2 class="text-3xl font-bold mb-6">Задачи</h2>
+    <div id="task-accordion">
+        {% for task in tasks %}
+        <div id="task-{{ task.id }}" class="task-accordion p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div class="task-header">
+                <div class="flex-grow">
+                    <span class="font-bold text-sm">Задача #{{ task.id }}</span> -
+                    <span class="text-sm">
+                        {{ task.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </span>
+                    <span class="session-status
+                                     {% if task.status == 'completed' %}bg-green-200 text-green-800
+                                     {% elif task.status == 'running' %}bg-blue-200 text-blue-800
+                                     {% else %}bg-red-200 text-red-800{% endif %}">
+                        {% if task.status == 'completed' %}Выполнено
+                        {% elif task.status == 'running' %}В работе
+                        {% else %}Ошибка{% endif %}
+                    </span>
+                </div>
+                <div class="task-actions">
+                    <button class="action-btn no-underline"
+                        onclick="downloadAnalysisTask('{{ task.id }}', 'xlsx')">XLSX</button>
+                    <button class="action-btn no-underline"
+                        onclick="downloadAnalysisTask('{{ task.id }}', 'csv_utf8')">CSV (utf-8)</button>
+                    <button class="action-btn no-underline"
+                        onclick="downloadAnalysisTask('{{ task.id }}', 'csv_win1251')">CSV
+                        (windows-1251)</button>
+                    <button class="action-btn no-underline"
+                        onclick="downloadAnalysisTask('{{ task.id }}', 'txt')">TXT</button>
+                    <button class=" toggle-btn button-open">Раскрыть</button>
+                    <button class="delete-btn" onclick="deleteAnalysisTask('{{ task.id }}', event)">
+                        <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                            class="inline-block">
+                            <g>
+                                <rect x="0" y="0" width="100" height="100" rx="15" ry="15" fill="#D80027" />
+                                <path d="M 20,20 L 80,80 M 80,20 L 20,80" stroke="white" stroke-width="12"
+                                    stroke-linecap="round" />
+                            </g>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="task-content hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    #</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Документы</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Title</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Description</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Объём текста</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Теги H1-H6</th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    LSI-слова</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for result in task.results %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">
+                                    <input type="checkbox" class="result-checkbox" value="{{ result.id }}"
+                                        data-result-id="{{ result.id }}">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a href="{{ result.url }}" target="_blank" title="{{ result.url }}"
+                                        class="text-blue-500 hover:underline truncate-link">
+                                        {{ result.url }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-gray-900 dark:text-gray-200">{{
+                                    result.title or 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-gray-500 dark:text-gray-400">{{
+                                    result.description or 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{
+                                    result.text_length or 'N/A' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button
+                                        class="toggle-content-btn text-blue-500 hover:underline">Показать/скрыть</button>
+                                    <div
+                                        class="content-to-toggle hidden mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800">
+                                        {% if result.headings %}
+                                        {% set headings_data = from_json(result.headings) %}
+                                        {% for h in headings_data %}
+                                        <span>H{{ h.level }}: {{ h.text }}</span><br>
+                                        {% endfor %}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button
+                                        class="toggle-content-btn text-blue-500 hover:underline">Показать/скрыть</button>
+                                    <div
+                                        class="content-to-toggle hidden mt-2 p-2 border rounded bg-gray-50 dark:bg-gray-800">
+                                        {% if result.lsi_words %}
+                                        {% set lsi_data = from_json(result.lsi_words) %}
+                                        {% for word in lsi_data %}
+                                        <span>{{ word }}</span><br>
+                                        {% endfor %}
+                                        {% else %}
+                                        N/A
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">Для этой задачи еще
+                                    нет результатов.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- Кнопка "Создать ТЗ на текст" -->
+                    <button class="analyze-selected-sites-btn action-btn text-white font-bold py-2 px-4 rounded">
+                        Создать ТЗ на текст
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>Задачи анализа страниц еще не создавались.</p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/toastify.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/page_analyzer_loader.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/page_analyzer_tor.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const accordion = document.getElementById('task-accordion');
+        if (accordion) {
+            accordion.addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('toggle-btn')) {
+                    const header = e.target.closest('.task-header');
+                    const content = header.nextElementSibling;
+                    content.classList.toggle('hidden');
+                    e.target.textContent = content.classList.contains('hidden') ? 'Раскрыть' : 'Скрыть';
+                }
+
+                if (e.target && e.target.classList.contains('toggle-content-btn')) {
+                    const content = e.target.nextElementSibling;
+                    content.classList.toggle('hidden');
+                }
+            });
+        }
+
+        const analyzerForm = document.getElementById('analyzerForm');
+        if (analyzerForm) {
+            analyzerForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const urls = document.getElementById('urls').value.split('\\n').filter(url => url.trim() !== '');
+                if (urls.length === 0) {
+                    alert('Пожалуйста, введите хотя бы один URL.');
+                    return;
+                }
+
+                // Сохранение ссылок в localStorage перед отправкой формы (новый ключ)
+                // Эта строка может быть удалена, если логика полностью перенесена в page_analyzer_loader.js
+                // localStorage.setItem('selectedSitesForAnalysis', urls.join('\\n'));
+
+                const analyzeButton = document.getElementById('analyzeButton');
+                const statusDiv = document.getElementById('statusDiv');
+
+                analyzeButton.disabled = true;
+                statusDiv.classList.remove('hidden');
+
+                fetch('/analyze-pages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ urls: urls }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        window.location.reload();
+                    })
+                    .catch(err => {
+                        document.getElementById('statusText').innerText = 'Ошибка: ' + err.message;
+                        analyzeButton.disabled = false;
+                    });
+            });
+        }
+    });
+
+    // This function is no longer needed with synchronous processing
+    // function pollStatus(taskId) { ... }
+
+    function downloadAnalysisTask(taskId, format) {
+        window.location.href = `/download-analysis/${taskId}?format=${format}`;
+    }
+
+    function deleteAnalysisTask(taskId, event) {
+        event.stopPropagation();
+
+        const confirmButton = document.createElement('button');
+        confirmButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded ml-2 toast-confirm-btn';
+        confirmButton.textContent = 'Да';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-1 toast-cancel-btn';
+        cancelButton.textContent = 'Отмена';
+
+        const notification = Toastify({
+            node: (() => {
+                const div = document.createElement('div');
+                div.innerHTML = "Вы уверены, что хотите удалить эту задачу? Это действие необратимо. ";
+                div.appendChild(confirmButton);
+                div.appendChild(cancelButton);
+                return div;
+            })(),
+            duration: -1,
+            close: false,
+            gravity: "top",
+            position: "center",
+            style: {
+                background: "#EF4444"
+            },
+            stopOnFocus: false,
+            escapeMarkup: false,
+            offset: { x: 0, y: 0 }
+        }).showToast();
+
+        setTimeout(() => {
+            const toastElement = document.querySelector('.toastify');
+            if (toastElement) {
+                const confirmBtn = toastElement.querySelector('.toast-confirm-btn');
+                const cancelBtn = toastElement.querySelector('.toast-cancel-btn');
+
+                if (confirmBtn) {
+                    confirmBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        fetch(`/delete-analysis/${taskId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    document.getElementById(`task-${taskId}`).remove();
+                                    Toastify({
+                                        text: data.message || "Задача успешно удалена",
+                                        duration: 5000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#4CAF50"
+                                        },
+                                    }).showToast();
+                                } else {
+                                    Toastify({
+                                        text: data.message || "Не удалось удалить задачу",
+                                        duration: 5000,
+                                        close: true,
+                                        gravity: "top",
+                                        position: "center",
+                                        style: {
+                                            background: "#EF4444"
+                                        },
+                                    }).showToast();
+                                }
+                            })
+                            .catch(error => {
+                                Toastify({
+                                    text: "Произошла ошибка при отправке запроса.",
+                                    duration: 5000,
+                                    close: true,
+                                    gravity: "top",
+                                    position: "center",
+                                    backgroundColor: "#EF4444",
+                                }).showToast();
+                            });
+                        notification.hideToast();
+                    };
+                }
+
+                if (cancelBtn) {
+                    cancelBtn.onclick = function (e) {
+                        e.stopPropagation();
+                        notification.hideToast();
+                    };
+                }
+            }
+        }, 100);
+    }
+</script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/toastify.css') }}">
+{% endblock %}

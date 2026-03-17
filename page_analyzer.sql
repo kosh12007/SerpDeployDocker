@@ -1,0 +1,1 @@
+ALTER TABLE page_analysis_tasks ADD COLUMN status ENUM('running', 'completed', 'error') DEFAULT 'running';

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему - SEO орбита</title>
+    <meta name="description"
+        content="Авторизуйтесь в системе SEO орбита для доступа к инструментам анализа поисковой выдачи и аудита сайтов.">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+    <link rel="stylesheet" href="/static/css/auth.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/toastify.css">
+</head>
+
+<body>
+    <div class="form-container">
+        <h1>🔐 Вход</h1>
+
+        
+        
+        
+
+        <form method="POST" action="/auth/login">
+            <input type="hidden" name="csrf_token" value="IjA5MWRkZWYzOWQ1NDY1NGExZTY1OWJiMGRkNDViOTA0OTAzOGE1N2Yi.aZc3Yg.GwxicuYYYLo-Yuv04zjzYywxe8g" />
+            <div class="form-group">
+                <label for="username">Имя пользователя:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Пароль:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember"> Запомнить меня
+                </label>
+            </div>
+
+            <button type="submit" class="btn">Войти</button>
+        </form>
+
+        <div class="links">
+            Нет аккаунта? <a href="/auth/register">Зарегистрироваться</a> | <a href="/auth/forgot-password">Забыли
+                пароль?</a>
+        </div>
+    </div>
+    <script type="text/javascript" src="/static/js/toastify.js"></script>
+
+    <div id="flash-messages" style="display: none;"
+        data-messages='[]'></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const flashDiv = document.getElementById('flash-messages');
+            const messages = JSON.parse(flashDiv.dataset.messages || '[]');
+
+            messages.forEach(item => {
+                const category = item[0];
+                const message = item[1];
+                let color = "#2196F3";
+                if (category === 'success') color = "#4CAF50";
+                else if (category === 'danger') color = "#EF4444";
+
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: color
+                    },
+                    stopOnFocus: true,
+                }).showToast();
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,147 @@
+<!-- Кнопка бургер-меню (видна только на мобильных < 1024px) -->
+<button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Открыть меню" aria-expanded="false">
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+    <span class="burger-line"></span>
+</button>
+
+<!-- Overlay для мобильного меню -->
+<div id="mobile-menu-overlay" class="mobile-menu-overlay"></div>
+
+<nav id="main-navigation" class="dws-menu bg-gray-100">
+    <ul class="z-50">
+        <li class="relative group py-2">
+            {% if project and project.id %}
+            <a href="{{ url_for('positions_parsing.project_positions', project_id=project.id) }}"
+                class="text-white project-link">Проверка позиций</a>
+            {% else %}
+            <a href="#" onclick="redirectToProjectPositions()" class="text-white project-link">Проверка
+                позиций</a>
+            {% endif %}
+            <ul class="absolute hidden dropdown-blur-blue z-10">
+
+                <li class="relative group py-2">
+                    <a href="{{ url_for('main.quick_check') }}" class="text-white relative z-10">Экспресс
+                        Проверка позиций</a>
+                    <ul class="absolute hidden dropdown-blur-blue z-10">
+                        <li class="py-2"><a href="{{ url_for('main.show_results') }}" class="text-white">История
+                                проверок</a></li>
+                    </ul>
+                </li>
+
+                <li class="relative group py-2">
+                    <a href="{{ url_for('project_routes.project_list') }}" class="text-white relative z-10">Проекты</a>
+                    <ul class="absolute hidden dropdown-blur-blue z-10">
+                        <li class="py-2"><a href="{{ url_for('project_routes.create_project') }}"
+                                class="text-white">Создать
+                                проект</a></li>
+                    </ul>
+                </li>
+
+            </ul>
+        </li>
+        <!-- <li class="py-2"><a href="{{ url_for('main.show_results') }}" class="text-white">История
+                проверок</a></li> -->
+        <li class="py-2"><a href="{{ url_for('top_sites.top_sites_page') }}" class="text-white">Выгрузка
+                ТОП-10</a></li>
+        <li class="py-2"><a href="{{ url_for('page_analyzer.page_analyzer') }}" class="text-white">Анализатор
+                страниц</a></li>
+
+        <li class="py-2"><a href="{{ url_for('text_tor.create_text_tor_page') }}" class="text-white">Создать
+                ТЗ на
+                Текст</a></li>
+
+        <li class="relative group py-2">
+            <a href="#" class="text-white">СЕО Инструменты</a>
+            <ul class="absolute hidden dropdown-blur-blue z-10">
+                <li><a href="{{ url_for('redirect_checker.check_redirects_page') }}" class="text-white">Проверка
+                        редиректов</a></li>
+                <li><a href="{{ url_for('http_status_checker.http_status_checker_page') }}" class="text-white">Проверка
+                        HTTP статусов</a></li>
+                <li class="py-2"><a href="{{ url_for('text_analyzer.text_analyzer') }}" class="text-white">Анализатор
+                        текста</a></li>
+                <li><a href="{{ url_for('clustering_bp.clustering_page') }}" class="text-white">Кластеризация</a></li>
+
+                <li><a href="{{ url_for('main.keyword_frequency') }}" class="text-white">Частотность ключевых слов (В
+                        разработке)</a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="relative group py-2">
+            <a href="#" class="text-white">AI Инструменты</a>
+            <ul class="absolute hidden dropdown-blur-blue z-10">
+                <li><a href="{{ url_for('ai.ai_page') }}" class="text-white">AI
+                        Ассистент</a></li>
+                <li><a href="{{ url_for('ai.article_generator_page') }}" class="text-white">Генератор
+                        статей</a></li>
+
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+<!-- Скрипт мобильного меню -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const menuOverlay = document.getElementById('mobile-menu-overlay');
+        const mainNav = document.getElementById('main-navigation');
+
+        if (!menuToggle || !mainNav) return;
+
+        // Переключение меню
+        function toggleMenu() {
+            const isOpen = mainNav.classList.contains('mobile-menu-open');
+
+            if (isOpen) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        }
+
+        // Открытие меню
+        function openMenu() {
+            mainNav.classList.add('mobile-menu-open');
+            menuToggle.classList.add('active');
+            menuToggle.setAttribute('aria-expanded', 'true');
+            if (menuOverlay) {
+                menuOverlay.classList.add('active');
+            }
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Закрытие меню
+        function closeMenu() {
+            mainNav.classList.remove('mobile-menu-open');
+            menuToggle.classList.remove('active');
+            menuToggle.setAttribute('aria-expanded', 'false');
+            if (menuOverlay) {
+                menuOverlay.classList.remove('active');
+            }
+            document.body.style.overflow = '';
+        }
+
+        // Обработчики событий
+        menuToggle.addEventListener('click', toggleMenu);
+
+        if (menuOverlay) {
+            menuOverlay.addEventListener('click', closeMenu);
+        }
+
+        // Закрытие по Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && mainNav.classList.contains('mobile-menu-open')) {
+                closeMenu();
+            }
+        });
+
+        // Закрытие при изменении размера экрана
+        window.addEventListener('resize', function () {
+            if (window.innerWidth >= 1024) {
+                closeMenu();
+            }
+        });
+    });
+</script>

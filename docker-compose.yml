@@ -1,0 +1,101 @@
+# ===============================================================
+# Docker Compose — DEV-окружение
+# Запуск: docker compose up -d --build
+# Доступ: http://localhost
+# ===============================================================
+
+services:
+
+  # ============================================================
+  # Сервис базы данных MySQL 8
+  # ============================================================
+  db:
+    image: mysql:8.0
+    container_name: serp_db
+    restart: unless-stopped
+    environment:
+      # Берём из .env файла
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Персистентные данные БД — не теряются при перезапуске
+      - mysql_data:/var/lib/mysql
+    ports:
+      # Пробрасываем порт для подключения из СУБД на хосте (DBeaver, TablePlus и др.)
+      # 3307 — внешний порт хоста, 3306 — внутренний порт контейнера
+      # Используем 3307 чтобы не конфликтовать с локальным MySQL
+      - "3307:3306"
+    networks:
+      - serp_network
+    healthcheck:
+      # Проверяем что MySQL принимает соединения
+      # Используем shell-форму для корректной подстановки пароля из окружения
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      start_period: 40s
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ============================================================
+  # Сервис Flask-приложения (gunicorn)
+  # ============================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: serp_web
+    restart: unless-stopped
+    # Загружаем все переменные из .env
+    env_file:
+      - .env
+    # Переопределяем хост БД для Docker-сети
+    environment:
+      DB_HOST: db
+    volumes:
+      # Логи доступны с хоста для мониторинга
+      - ./logs:/app/logs
+      # Статика монтируется для чтения Nginx
+      - ./static:/app/static:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - serp_network
+    # Порт не открываем наружу — только через Nginx
+    expose:
+      - "8000"
+
+  # ============================================================
+  # Сервис Nginx — обратный прокси
+  # ============================================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: serp_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # Dev-конфигурация Nginx
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      # Статика — Nginx отдаёт напрямую (без Flask)
+      - ./static:/app/static:ro
+    depends_on:
+      - web
+    networks:
+      - serp_network
+
+# ============================================================
+# Сети
+# ============================================================
+networks:
+  serp_network:
+    driver: bridge
+
+# ============================================================
+# Volumes (персистентные данные)
+# ============================================================
+volumes:
+  mysql_data:
+    driver: local

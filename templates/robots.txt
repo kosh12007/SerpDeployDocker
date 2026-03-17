@@ -1,0 +1,27 @@
+User-agent: *
+
+Allow: /
+Allow: /check-redirects
+allow: /text-analyzer
+allow: /http-status-checker
+
+Disallow: /auth/login
+Disallow: /auth/register
+Disallow: /auth/forgot-password
+Disallow: /auth/reset-password
+Disallow: /api/
+Disallow: /projects/
+Disallow: /auth/logout
+Disallow: /show-results
+Disallow: /quick-check
+Disallow: /page-analyzer
+Disallow: /clustering
+Disallow: /text-tor
+Disallow: /redirect-checker
+Disallow: /http_status_checker
+Disallow: /top-sites
+Disallow: /ai
+Disallow: /article-generator
+Disallow: /keyword-frequency
+
+Sitemap: {{ url_for('seo.sitemap', _external=True) }}

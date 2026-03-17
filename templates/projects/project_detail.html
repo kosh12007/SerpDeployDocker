@@ -1,0 +1,813 @@
+{% extends "layout.html" %}
+
+{% block title %}Детали проекта: {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Проект: {{ project.name }}</h1>
+
+    <div class="mb-4">
+        <button type="submit" class="action-btn-2">
+
+            <a href="{{ url_for('positions_parsing.project_positions', project_id=project.id) }}">Проверка позиций</a>
+        </button>
+    </div>
+
+    <div class="mb-4 flex space-x-2">
+        <form action="{{ url_for('project_routes.delete_project', project_id=project.id) }}" method="POST"
+            onsubmit="return confirm('Вы уверены, что хотите удалить этот проект? Это действие необратимо.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                Удалить проект
+            </button>
+        </form>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Варианты парсинга</h2>
+        <div class="filter-controls mb-4 grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+            <table id="variants-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            ID</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Название</th>
+                        <th scope="col"
+                            class="filter-trigger relative px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider search-type-column cursor-pointer modal-trigger"
+                            data-target="search-type-filter-modal-content" data-filter-type="search-type">
+                            <span class="flex items-center">
+                                Тип поиска
+                                <svg class="filter-icon ml-2 h-4 w-4 hidden" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </th>
+                        <th scope="col"
+                            class="filter-trigger relative px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider search-engine-column cursor-pointer modal-trigger"
+                            data-target="search-engine-filter-modal-content" data-filter-type="search-engine">
+                            <span class="flex items-center">
+                                ПС
+                                <svg class="filter-icon ml-2 h-4 w-4 hidden" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </th>
+                        <th scope="col"
+                            class="filter-trigger relative px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider region-column cursor-pointer modal-trigger"
+                            data-target="region-filter-modal-content" data-filter-type="region">
+                            <span class="flex items-center">
+                                Регион
+                                <svg class="filter-icon ml-2 h-4 w-4 hidden" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </th>
+                        <th scope="col"
+                            class="filter-trigger relative px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-500 uppercase tracking-wider device-column cursor-pointer modal-trigger"
+                            data-target="device-filter-modal-content" data-filter-type="device">
+                            <span class="flex items-center">
+                                Устройство
+                                <svg class="filter-icon ml-2 h-4 w-4 hidden" fill="currentColor" viewBox="0 0 20 20"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                        </th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Глубина парсинга</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for variant in variants %}
+                    <tr class="variant-row" data-search-engine="{{ variant.search_engine|default('', true) }}"
+                        data-region="{{ variant.region if variant.search_engine_id == 1 else variant.location }}"
+                        data-device="{{ variant.device|default('', true) }}"
+                        data-search-type="{{ variant.search_type|default('', true) }}"
+                        data-variant-id="{{ variant.id }}">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ variant.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ variant.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap search-type-value">{{ variant.search_type|default('N/A',
+                            true) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap search-engine-value">{{
+                            variant.search_engine|default('N/A', true) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap region-value">
+                            {{ variant.region if variant.search_engine_id == 1 else variant.location }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap device-value">{{ variant.device|default('N/A', true) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ variant.page_limit|default('N/A', true) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="delete-variant-btn" data-variant-id="{{ variant.id }}">
+                                <svg width="24" height="24" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                                    class="inline-block">
+                                    <g>
+                                        <rect x="0" y="0" width="100" height="100" rx="15" ry="15" fill="#D80027" />
+                                        <path d="M 20,20 L 80,80 M 80,20 L 20,80" stroke="white" stroke-width="12"
+                                            stroke-linecap="round" />
+                                    </g>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center">Варианты парсинга не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Форма для добавления варианта парсинга -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Добавить вариант парсинга</h2>
+
+        <form id="parserForm" method="POST"
+            action="{{ url_for('project_routes.add_parsing_variant', project_id=project.id) }}" class="space-y-4"
+            data-project-id="{{ project.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div>
+                <label for="engine" class="block mb-2">Поисковая система:</label>
+                <select name="engine" id="engine" onchange="toggleYandexOptions()"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <option value="yandex">Yandex</option>
+                    <option value="google">Google</option>
+                </select>
+            </div>
+
+            <div id="yandexOptions" class="hidden mt-4">
+                <label for="yandex_type" class="block mb-2">Тип поиска в Яндексе:</label>
+                <select name="yandex_type" id="yandex_type"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <option value="search_api">Search API (Топ-100)</option>
+                    <option value="live_search">Живой поиск (Топ-10, 20, 30, 50, 100)</option>
+                </select>
+
+                <div id="yandex-page-limit-options" class="mt-2 hidden">
+                    <label for="yandex_page_limit" class="block mb-2">Глубина проверки (страниц):</label>
+                    <input type="number" id="yandex_page_limit" name="yandex_page_limit" value="10" min="1" max="100"
+                        class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">ТОП-10 укажите 1, для Топ-100 — 10</p>
+                </div>
+            </div>
+
+            <div id="google-page-limit-options" class="mt-2 hidden">
+                <label for="google_page_limit" class="block mb-2">Глубина проверки (страниц):</label>
+                <input type="number" id="google_page_limit" name="google_page_limit" value="10" min="1" max="100"
+                    class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">ТОП-10 укажите 1, для Топ-100 — 10</p>
+            </div>
+
+            <div id="location-options" class="mt-2 hidden">
+                <label for="loc_id" class="block mb-2">Локация:</label>
+                <div id="google-location-wrapper">
+                    <select name="loc_id_google" id="location-select-google"></select>
+                </div>
+                <div id="yandex-location-wrapper" class="hidden">
+                    <select name="loc_id_yandex" id="location-select-yandex"></select>
+                </div>
+
+                <div id="device-wrapper">
+                    <label for="device-select"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Устройство</label>
+                    <select name="device" id="device-select"></select>
+                </div>
+
+
+            </div>
+            <div class="mt-6">
+                <button type="submit" class="action-btn-2">
+                    Добавить вариант
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Поисковые запросы</h2>
+        <div class="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            ID</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Текст</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Группа</th>
+                        <th scope="col"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Действия</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for query in queries %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ query['id'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ query['query_text'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ query['group_name'] }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <!-- Действия для запросов -->
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center">Поисковые запросы не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Форма для добавления поисковых запросов -->
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-2">Добавить поисковые запросы</h2>
+        <form id="add-queries-form" class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="mb-4">
+                <label for="queries_text"
+                    class="block text-sm font-medium text-gray-500 dark:text-gray-300 dark:text-gray-300 bg-gray-50 dark:bg-gray-700">Поисковые
+                    запросы</label>
+                <textarea name="queries_text" id="queries_text" rows="5"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                    placeholder="Каждый запрос с новой строки"></textarea>
+            </div>
+            <div class="mb-4">
+                <label for="group_name"
+                    class="block text-sm font-medium text-gray-500 dark:text-gray-300 dark:text-gray-300 bg-gray-50 dark:bg-gray-700">Название
+                    группы (необязательно)</label>
+                <input type="text" name="group_name" id="group_name"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                    placeholder="Название группы">
+            </div>
+            <button type="submit" class="action-btn-2">
+                Добавить запросы
+            </button>
+        </form>
+    </div>
+
+    <div>
+        <h2 class="text-xl font-semibold mb-2">Запуск парсинга</h2>
+        <!-- Формы для запуска парсинга будут добавлены здесь -->
+    </div>
+</div>
+
+
+<!-- data-target="search-engine-filter-modal-content" data-filter-type="search-engine" -->
+<!-- Скрытый контент для модального окна фильтра "Устройство" -->
+<div id="device-filter-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4">Фильтр по устройству</h3>
+    <div class="filter-options-modal">
+        <!-- Сюда будет сгенерирован список устройств -->
+    </div>
+</div>
+
+<!-- Скрытый контент для модального окна фильтра "Регион" -->
+<div id="region-filter-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4">Фильтр по региону</h3>
+    <div class="filter-options-modal">
+        <!-- Сюда будет сгенерирован список регионов -->
+    </div>
+</div>
+
+<!-- Скрытый контент для модального окна фильтра "ПС" -->
+<div id="search-engine-filter-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4">Фильтр по Поисковой Системе</h3>
+    <div class="filter-options-modal">
+        <!-- Сюда будет сгенерирован список ПС -->
+    </div>
+</div>
+
+<!-- Скрытый контент для модального окна фильтра "Тип поиска" -->
+<div id="search-type-filter-modal-content" class="hidden">
+    <h3 class="text-lg font-semibold mb-4">Фильтр по Типу поиска</h3>
+    <div class="filter-options-modal">
+        <!-- Сюда будет сгенерирован список типов поиска -->
+    </div>
+</div>
+
+
+<!-- Универсальное модальное окно -->
+<div id="universalModal"
+    class="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 flex items-center justify-center"
+    style="display: none !important;">
+    <div class="relative mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <div id="modalBody" class="mt-2 px-7 py-3">
+                <div class="items-center px-4 py-3">
+                    <button class="modal-close py-2
+                    text-base font-medium rounded-md
+                     hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                        Закрыть
+                    </button>
+                </div>
+                <!-- Содержимое будет вставлено сюда -->
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.delete-variant-btn');
+        const modal = document.getElementById('confirmation-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText = document.getElementById('modal-text');
+        const confirmButton = document.getElementById('modal-confirm');
+        const cancelButton = document.getElementById('modal-cancel');
+        let variantIdToDelete = null;
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const variantId = this.getAttribute('data-variant-id');
+
+                const confirmButton = document.createElement('button');
+                confirmButton.className = 'bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded ml-2 toast-confirm-btn';
+                confirmButton.textContent = 'Да';
+
+                const cancelButton = document.createElement('button');
+                cancelButton.className = 'bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded ml-1 toast-cancel-btn';
+                cancelButton.textContent = 'Отмена';
+
+                const notification = Toastify({
+                    node: (() => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `Вы уверены, что хотите удалить вариант парсинга #${variantId}? Это действие необратимо. `;
+                        div.appendChild(confirmButton);
+                        div.appendChild(cancelButton);
+                        return div;
+                    })(),
+                    duration: -1,
+                    close: false,
+                    gravity: "top",
+                    position: "center",
+                    style: {
+                        background: "#EF4444"
+                    },
+                    stopOnFocus: false,
+                    escapeMarkup: false,
+                    offset: { x: 0, y: 0 }
+                }).showToast();
+
+                setTimeout(() => {
+                    try {
+                        const toastElement = document.querySelector('.toastify');
+                        if (toastElement) {
+                            const confirmBtn = toastElement.querySelector('.toast-confirm-btn');
+                            const cancelBtn = toastElement.querySelector('.toast-cancel-btn');
+
+                            if (confirmBtn) {
+                                confirmBtn.onclick = function (e) {
+                                    e.stopPropagation();
+
+                                    fetch(`{{ url_for('project_routes.delete_parsing_variant', variant_id=0) }}`.replace('0', variantId), {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                        },
+                                        body: JSON.stringify({
+                                            variant_id: variantId
+                                        })
+                                    })
+                                        .then(response => {
+                                            if (response.headers.get('Content-Type') && response.headers.get('Content-Type').includes('application/json')) {
+                                                return response.json().then(data => ({ ok: response.ok, data }));
+                                            } else {
+                                                // Если ответ не JSON, то предполагаем, что это ошибка
+                                                return response.text().then(text => ({
+                                                    ok: false,
+                                                    data: { message: 'Сервер вернул не JSON-ответ: ' + text.substring(0, 100) + '...' }
+                                                }));
+                                            }
+                                        })
+                                        .then(({ ok, data }) => {
+                                            if (ok) {
+                                                const variantElement = document.querySelector(`tr[data-variant-id="${variantId}"]`);
+                                                if (variantElement) {
+                                                    variantElement.remove();
+                                                }
+                                                Toastify({
+                                                    text: data.message || "Вариант успешно удален",
+                                                    duration: 1000,
+                                                    style: {
+                                                        background: "#4CAF50"
+                                                    },
+                                                }).showToast();
+                                            } else {
+                                                Toastify({
+                                                    text: data.message || "Не удалось удалить вариант",
+                                                    duration: 1000,
+                                                    style: {
+                                                        background: "#EF4444"
+                                                    },
+
+                                                }).showToast();
+                                            }
+                                        })
+                                        .catch(error => {
+                                            Toastify({
+                                                text: "Произошла ошибка при отправке запроса.",
+                                                duration: 1000,
+                                                style: {
+                                                    background: "#EF4444"
+                                                },
+                                            }).showToast();
+                                            console.error('Ошибка fetch:', error);
+                                        });
+                                    notification.hideToast();
+                                };
+                            }
+                            if (cancelBtn) {
+                                cancelBtn.onclick = function (e) {
+                                    e.stopPropagation();
+                                    notification.hideToast();
+                                };
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Ошибка в обработчике кнопок подтверждения:', error);
+                    }
+                }, 100);
+            });
+        });
+    });
+
+    document.getElementById('add-queries-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const queriesText = document.querySelector('textarea[name="queries_text"]').value;
+        const groupName = document.querySelector('input[name="group_name"]').value;
+
+        const lines = queriesText.split('\n').filter(line => line.trim() !== '');
+
+        if (lines.length === 0) {
+            alert('Пожалуйста, введите хотя бы один поисковый запрос.');
+            return;
+        }
+
+        const queries = lines.map(line => ({
+            text: line.trim(),
+            group: groupName.trim() || null
+        }));
+
+        const body = JSON.stringify({ queries: queries });
+
+        fetch('/api/projects/{{ project.id }}/queries', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: body
+        })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Произошла ошибка при добавлении запросов.');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при отправке запроса.');
+            });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('parserForm');
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                const engine = data.engine;
+                if (engine === 'yandex') {
+                    data.page_limit = data.yandex_page_limit;
+                } else if (engine === 'google') {
+                    data.page_limit = data.google_page_limit;
+                }
+            });
+        }
+    });
+</script>
+<script src="{{ url_for('static', filename='js/form_handler_project.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        toggleYandexOptions();
+
+        new CustomSelect('#location-select-google', {
+            apiUrl: '/api/locations',
+            placeholder: 'Выберите локацию для Google'
+        }).setDefault(20949, 'Moscow,Moscow,Russia');
+
+        new CustomSelect('#location-select-yandex', {
+            apiUrl: '/api/yandex-regions',
+            placeholder: 'Выберите регион для Яндекса'
+        }).setDefault(213, 'Москва');
+
+        new CustomSelect('#device-select', {
+            apiUrl: '/api/devices',
+            placeholder: 'Выберите устройство'
+        }).setDefault(1, 'Компьютеры');
+
+        const engineSelect = document.getElementById('engine');
+        if (engineSelect) {
+            engineSelect.addEventListener('change', toggleYandexOptions);
+        }
+
+        const yandexTypeSelect = document.getElementById('yandex_type');
+        if (yandexTypeSelect) {
+            yandexTypeSelect.addEventListener('change', toggleYandexOptions);
+        }
+    });
+
+    function toggleYandexOptions() {
+        const engineSelect = document.getElementById('engine');
+        const engine = engineSelect.value;
+        const yandexOptions = document.getElementById('yandexOptions');
+        const yandexType = document.getElementById('yandex_type').value;
+        const yandexPageLimitOptions = document.getElementById('yandex-page-limit-options');
+        const googlePageLimitOptions = document.getElementById('google-page-limit-options');
+        const googleLocationWrapper = document.getElementById('google-location-wrapper');
+        const yandexLocationWrapper = document.getElementById('yandex-location-wrapper');
+        const locationOptions = document.getElementById('location-options');
+
+        // Скрываем все опции, связанные с выбором ПС
+        yandexOptions.classList.add('hidden');
+        googlePageLimitOptions.classList.add('hidden');
+        googleLocationWrapper.classList.add('hidden');
+        yandexLocationWrapper.classList.add('hidden');
+        locationOptions.classList.add('hidden');
+
+        if (engine === 'yandex') {
+            yandexOptions.classList.remove('hidden');
+            locationOptions.classList.remove('hidden');
+            yandexLocationWrapper.classList.remove('hidden');
+            if (yandexType === 'live_search') {
+                yandexPageLimitOptions.classList.remove('hidden');
+            } else {
+                yandexPageLimitOptions.classList.add('hidden');
+            }
+        } else if (engine === 'google') {
+            googlePageLimitOptions.classList.remove('hidden');
+            locationOptions.classList.remove('hidden');
+            googleLocationWrapper.classList.remove('hidden');
+        }
+    }
+</script>
+
+<script>
+    function initializeFilters() {
+        const uniqueValues = {
+            searchType: new Set(),
+            searchEngine: new Set(),
+            region: new Set(),
+            device: new Set()
+        };
+
+        document.querySelectorAll('#variants-table tbody tr').forEach(row => {
+            const searchType = row.getAttribute('data-search-type') || '';
+            if (searchType) uniqueValues.searchType.add(searchType);
+
+            const searchEngine = row.getAttribute('data-search-engine') || '';
+            if (searchEngine) uniqueValues.searchEngine.add(searchEngine);
+
+            const region = row.getAttribute('data-region') || '';
+            if (region) uniqueValues.region.add(region);
+
+            const device = row.getAttribute('data-device') || '';
+            if (device) uniqueValues.device.add(device);
+        });
+
+    }
+
+    function setupFilterEventListeners() {
+        // Handler for old dropdowns
+        document.querySelectorAll('th[data-filter-type]:not(.modal-trigger)').forEach(header => {
+            header.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const filterDropdown = this.querySelector('.filter-options');
+                if (filterDropdown) {
+                    document.querySelectorAll('.filter-options').forEach(dropdown => {
+                        if (dropdown !== filterDropdown) {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+                    filterDropdown.classList.toggle('hidden');
+                }
+            });
+        });
+
+        document.querySelectorAll('.filter-options .option-item').forEach(option => {
+            option.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const filterHeader = this.closest('th[data-filter-type]');
+                const filterType = filterHeader.getAttribute('data-filter-type');
+                const filterValue = this.getAttribute('data-value') || '';
+                handleFilterChange(filterType, filterValue);
+                this.closest('.filter-options').classList.add('hidden');
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('th[data-filter-type]')) {
+                document.querySelectorAll('.filter-options').forEach(dropdown => {
+                    dropdown.classList.add('hidden');
+                });
+            }
+        });
+    }
+
+    function handleFilterChange(filterType, filterValue) {
+        const projectId = '{{ project.id }}';
+        updateFilterDisplay(filterType, filterValue);
+        const savedFilters = JSON.parse(localStorage.getItem('project_filters_' + projectId) || '{}');
+        if (filterValue === '') {
+            delete savedFilters[filterType];
+        } else {
+            savedFilters[filterType] = filterValue;
+        }
+        localStorage.setItem('project_filters_' + projectId, JSON.stringify(savedFilters));
+        applyAllFilters();
+    }
+
+    function applyAllFilters() {
+        const projectId = '{{ project.id }}';
+        const filters = JSON.parse(localStorage.getItem('project_filters_' + projectId) || '{}');
+        const rows = document.querySelectorAll('#variants-table tbody tr');
+
+        rows.forEach(row => {
+            let isVisible = true;
+            for (const [key, value] of Object.entries(filters)) {
+                if (value) {
+                    const rowValue = row.getAttribute(`data-${key.replace('_', '-')}`);
+                    if (rowValue === null || rowValue.toLowerCase() !== value.toLowerCase()) {
+                        isVisible = false;
+                        break;
+                    }
+                }
+            }
+            row.style.display = isVisible ? '' : 'none';
+        });
+        updateRowsCounter();
+    }
+
+    function updateFilterDisplay(filterType, filterValue) {
+        const headerIcon = document.querySelector(`th[data-filter-type="${filterType}"] .filter-icon`);
+        if (headerIcon) {
+            headerIcon.classList.toggle('hidden', !filterValue);
+        }
+    }
+
+    function updateRowsCounter() {
+        const visibleRows = document.querySelectorAll('#variants-table tbody tr:not([style*="display: none"])');
+        const totalRows = document.querySelectorAll('#variants-table tbody tr').length;
+        const counterElement = document.getElementById('visible-rows-counter');
+
+        if (counterElement) {
+            counterElement.textContent = `Показано ${visibleRows.length} из ${totalRows} вариантов`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeFilters();
+        setupFilterEventListeners();
+
+        const projectId = '{{ project.id }}';
+        const savedFilters = JSON.parse(localStorage.getItem('project_filters_' + projectId) || '{}');
+        for (const [key, value] of Object.entries(savedFilters)) {
+            if (value) {
+                updateFilterDisplay(key, value);
+            }
+        }
+        applyAllFilters();
+        updateRowsCounter();
+    });
+
+    // --- Функция для наполнения опций в модальных окнах ---
+    // Вызывается из modal.js
+    function populateModalOptions(targetId, container) {
+        // Определяем filterType на основе targetId и data-filter-type
+        // Находим элемент, который вызвал модальное окно, по его data-target
+        const triggerElement = document.querySelector(`[data-target="${targetId}"]`);
+        if (!triggerElement) {
+            console.error(`Не найден элемент, вызвавший модальное окно с id: ${targetId}`);
+            return;
+        }
+        const filterType = triggerElement.getAttribute('data-filter-type');
+        if (!filterType) {
+            console.error(`У элемента-триггера отсутствует атрибут data-filter-type: ${targetId}`);
+            return;
+        }
+
+        // Собираем уникальные значения из таблицы для заданного filterType
+        const uniqueValues = new Set();
+        document.querySelectorAll('#variants-table tbody tr').forEach(row => {
+            const value = row.getAttribute(`data-${filterType}`) || '';
+            if (value) {
+                uniqueValues.add(value);
+            }
+        });
+
+        // Очищаем контейнер и добавляем опцию "Все"
+        container.innerHTML = '<div class="option-item px-4 py-2 hover:bg-gray-10 dark:hover:bg-gray-700 cursor-pointer" data-value="">Все</div>';
+
+        // Добавляем уникальные значения как опции
+        uniqueValues.forEach(value => {
+            const option = document.createElement('div');
+            option.className = 'option-item px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer';
+            option.textContent = value;
+            option.setAttribute('data-value', value);
+            container.appendChild(option);
+        });
+
+        // Навешиваем обработчики кликов на новые опции
+        container.querySelectorAll('.option-item').forEach(option => {
+            option.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const value = this.getAttribute('data-value');
+                handleFilterChange(filterType, value);
+                if (window.universalModalInstance) {
+                    window.universalModalInstance.closeModal();
+                }
+            });
+        });
+    }
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.modalLogicHandler) {
+            window.modalLogicHandler = {
+                handlers: {},
+                register: function (id, handler) {
+                    this.handlers[id] = handler;
+                },
+                getHandler: function (id) {
+                    return this.handlers[id];
+                }
+            };
+        }
+
+        // Регистрируем обработчик для всех модальных окон фильтров
+        window.modalLogicHandler.register('search-type-filter-modal-content', function (modalBody) {
+            const container = modalBody.querySelector('.filter-options-modal');
+            if (container) {
+                populateModalOptions('search-type-filter-modal-content', container);
+            }
+        });
+        window.modalLogicHandler.register('search-engine-filter-modal-content', function (modalBody) {
+            const container = modalBody.querySelector('.filter-options-modal');
+            if (container) {
+                populateModalOptions('search-engine-filter-modal-content', container);
+            }
+        });
+        window.modalLogicHandler.register('region-filter-modal-content', function (modalBody) {
+            const container = modalBody.querySelector('.filter-options-modal');
+            if (container) {
+                populateModalOptions('region-filter-modal-content', container);
+            }
+        });
+        window.modalLogicHandler.register('device-filter-modal-content', function (modalBody) {
+            const container = modalBody.querySelector('.filter-options-modal');
+            if (container) {
+                populateModalOptions('device-filter-modal-content', container);
+            }
+        });
+    });
+</script>
+{% endblock %}

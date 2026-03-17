@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS migrations (
+    version VARCHAR(255) NOT NULL,
+    PRIMARY KEY (version)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

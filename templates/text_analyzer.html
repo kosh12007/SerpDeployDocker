@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block title %}Текстовый анализатор - SEO орбита{% endblock %}
+{% block meta_description %}Анализируйте контент ваших страниц и страниц конкурентов. Оценка длины текста, вхождений
+ключевых слов и LSI-фраз.{% endblock %}
+{% block meta_keywords %}текстовый анализ, SEO аудит контента, проверка LSI, анализ ключевых слов{% endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Анализатор текста</h1>
+
+
+{% set info_content %}
+<p>Этот инструмент позволяет анализировать текст или веб-страницы для вычисления различных метрик.</p>
+<ol class="list-decimal list-inside mt-2">
+    <li><strong>Ввод данных:</strong> Введите текст напрямую или укажите URL веб-страницы для анализа.</li>
+    <li><strong>Анализ:</strong> Инструмент вычисляет объем текста, количество слов, "тошноту", "заспамленность" и
+        "водность" текста.</li>
+    <li><strong>Результаты:</strong> Данные отображаются в виде таблицы с основными метриками.</li>
+</ol>
+{% endset %}
+{{ render_info_block("Описание функционала", info_content, id_prefix='text-analyzer-info') }}
+
+
+<form id="textAnalyzerForm" class="space-y-4">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="mb-4">
+        <label class="block mb-2">Выберите тип ввода:</label>
+        <div class="flex space-x-4">
+            <label class="inline-flex items-center">
+                <input type="radio" name="inputType" value="text" checked class="form-radio text-blue-600">
+                <span class="ml-2">Текст</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" name="inputType" value="url" class="form-radio text-blue-600">
+                <span class="ml-2">URL</span>
+            </label>
+        </div>
+    </div>
+    <div id="inputContainer">
+        <div>
+            <label for="textInput" class="block mb-2">Введите текст или URL:</label>
+            <textarea name="textInput" id="textInput" rows="8"
+                placeholder="Введите ваш текст здесь или URL веб-страницы..."
+                class="w-full p-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600"
+                required></textarea>
+        </div>
+    </div>
+
+    <div id="textHighlightView"
+        class="w-full p-4 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 whitespace-pre-wrap break-words min-h-[200px] hidden overflow-y-auto max-h-[500px]">
+    </div>
+
+    <div class="flex justify-between items-center mt-4">
+        <button type="submit" id="analyzeButton"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Анализировать</button>
+        <button type="button" id="resetButton"
+            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded hidden">Новый анализ</button>
+    </div>
+</form>
+
+<div id="resultsContainer" class="hidden mt-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Результаты анализа</h2>
+        <div id="activeHighlightLabel" class="text-sm font-semibold text-gray-600 dark:text-gray-400"></div>
+    </div>
+    <div id="resultsContent" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6"></div>
+
+    <div id="frequencyTables" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-bold mb-4">Семантический анализ</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <h4 class="font-semibold mb-2">1 слово</h4>
+                <div id="freqTable1" class="text-sm overflow-y-auto max-h-[400px]"></div>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-2">2 слова</h4>
+                <div id="freqTable2" class="text-sm overflow-y-auto max-h-[400px]"></div>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-2">3 слова</h4>
+                <div id="freqTable3" class="text-sm overflow-y-auto max-h-[400px]"></div>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-2 text-blue-600 dark:text-blue-400">Стоп-слова (Водность)</h4>
+                <div id="freqTableStop" class="text-sm overflow-y-auto max-h-[400px]"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loadingSpinner" class="hidden flex justify-center items-center mt-6">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    <span class="ml-3">Выполняется анализ...</span>
+</div>
+
+<!-- Кнопки управления результатами -->
+<div id="results-actions" class="hidden mt-6 flex flex-wrap justify-center gap-2">
+    <button id="copy-results-btn" class="action-btn no-underline">Копировать в буфер</button>
+    <button id="download-xlsx-btn" class="action-btn no-underline">XLSX</button>
+    <button id="download-csv-utf8-btn" class="action-btn no-underline">CSV (utf-8)</button>
+    <button id="download-csv-win1251-btn" class="action-btn no-underline">CSV (windows-1251)</button>
+    <button id="download-txt-btn" class="action-btn no-underline">TXT</button>
+</div>
+
+<div id="errorContainer" class="hidden mt-6 p-4 bg-red-100 border-red-400 text-red-700 rounded"></div>
+
+<section id="seo-description"
+    class="mt-12 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transition-all duration-300">
+    <h2
+        class="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 text-center">
+        СЕО анализ текста: профессиональные метрики и алгоритмы проверки контента
+    </h2>
+
+    <p class="text-lg text-gray-700 dark:text-gray-300 mb-8 leading-relaxed text-center max-w-4xl mx-auto">
+        Качественный контент — залог успешного продвижения в поисковых системах. Наш инструмент проводит комплексный
+        <strong>СЕО анализ текста</strong>, оценивая ключевые параметры, которые влияют на ранжирование и читаемость
+        вашего материала.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        <!-- Водность -->
+        <div
+            class="flex flex-col p-6 bg-blue-50 dark:bg-gray-700/50 rounded-xl border border-blue-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+            <h3 class="text-xl font-bold mb-3 text-blue-700 dark:text-blue-300 flex items-center">
+                <span
+                    class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 text-base shadow-inner">1</span>
+                Водность текста
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+                <strong>Водность</strong> — это показатель наличия в тексте малозначимых слов, которые не несут
+                смысловой нагрузки (стоп-слова: предлоги, союзы, частицы). Высокая «вода» размывает основную мысль и
+                негативно воспринимается поисковыми алгоритмами. Оптимальное значение помогает сделать текст более емким
+                и информативным.
+            </p>
+            <div class="space-y-3">
+                <div
+                    class="bg-white dark:bg-gray-800 p-3 rounded-lg text-xs font-mono text-gray-500 border border-blue-100 dark:border-gray-600">
+                    <span class="text-indigo-500 font-bold">Алгоритм:</span> (количество_стоп-слов / всего_слов) * 100%
+                </div>
+                <div class="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <span
+                        class="text-xs font-bold text-blue-800 dark:text-blue-200 uppercase tracking-wider block mb-1">Рекомендуемые
+                        значения</span>
+                    <p class="text-sm font-semibold text-blue-700 dark:text-blue-300">15% – 30%</p>
+                    <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-1">До 15% — текст сухой, более 30% —
+                        избыток «воды».</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Тошнота -->
+        <div
+            class="flex flex-col p-6 bg-indigo-50 dark:bg-gray-700/50 rounded-xl border border-indigo-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+            <h3 class="text-xl font-bold mb-3 text-indigo-700 dark:text-indigo-300 flex items-center">
+                <span
+                    class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-3 text-base shadow-inner">2</span>
+                Тошнота текста
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+                Показатель заспамленности текста самыми частотными словами. Мы разделяем её на два вида, полностью
+                исключая стоп-слова из расчетов. Это позволяет точно оценить переоптимизацию значимых ключей.
+            </p>
+            <div class="space-y-3">
+                <div
+                    class="bg-white dark:bg-gray-800 p-3 rounded-lg text-xs font-mono text-gray-500 border border-indigo-100 dark:border-gray-600 leading-relaxed">
+                    <span class="text-indigo-500 font-bold">Классическая:</span> √ (повторов самого частого слова)
+                    <br>
+                    <span class="text-indigo-500 font-bold">Академическая:</span> (повторов / значимых слов) * 100%
+                </div>
+                <div
+                    class="bg-indigo-100 dark:bg-indigo-900/40 p-3 rounded-lg border border-indigo-200 dark:indigo-800">
+                    <span
+                        class="text-xs font-bold text-indigo-800 dark:text-indigo-200 uppercase tracking-wider block mb-1">Рекомендуемые
+                        значения</span>
+                    <p class="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">Классическая: 3 – 5 (до 7)
+                    </p>
+                    <p class="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">Академическая: 4% – 6% (до
+                        7%)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Заспамленность -->
+        <div
+            class="flex flex-col p-6 bg-purple-50 dark:bg-gray-700/50 rounded-xl border border-purple-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+            <h3 class="text-xl font-bold mb-3 text-purple-700 dark:text-purple-300 flex items-center">
+                <span
+                    class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-3 text-base shadow-inner">3</span>
+                Заспамленность
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+                Оценивает общую концентрацию повторяющихся слов и фраз в документе (исключая стоп-слова). Помогает
+                оценить естественность текста. Разнообразный лексикон повышает доверие поисковых систем и улучшает
+                читаемость.
+            </p>
+            <div class="space-y-3">
+                <div
+                    class="bg-white dark:bg-gray-800 p-3 rounded-lg text-xs font-mono text-gray-500 border border-purple-100 dark:border-gray-600">
+                    <span class="text-indigo-500 font-bold">Алгоритм:</span> ((всего_значимых - уникальных_значимых) /
+                    всего_значимых) * 100%
+                </div>
+                <div
+                    class="bg-purple-100 dark:bg-purple-900/40 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <span
+                        class="text-xs font-bold text-purple-800 dark:text-purple-200 uppercase tracking-wider block mb-1">Рекомендуемые
+                        значения</span>
+                    <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">30% – 60%</p>
+                    <p class="text-[10px] text-purple-600 dark:text-purple-400 mt-1">Оптимально 40-50%. Свыше 60% —
+                        текст перенасыщен повторами.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- N-граммы -->
+        <div
+            class="flex flex-col p-6 bg-emerald-50 dark:bg-gray-700/50 rounded-xl border border-emerald-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+            <h3 class="text-xl font-bold mb-3 text-emerald-700 dark:text-emerald-300 flex items-center">
+                <span
+                    class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center mr-3 text-base shadow-inner">4</span>
+                Анализ N-грамм
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 flex-grow">
+                <strong>N-граммы</strong> — это устойчивые последовательности из одного, двух или трех слов, которые
+                формируют тематический каркас статьи. Это основной инструмент для проверки соответствия контента
+                выбранному семантическому ядру и выявления скрытой семантики.
+            </p>
+            <div class="space-y-3">
+                <div
+                    class="bg-white dark:bg-gray-800 p-3 rounded-lg text-xs font-mono text-gray-500 border border-emerald-100 dark:border-gray-600">
+                    <span class="text-indigo-500 font-bold">Алгоритм:</span> Разбивка текста на токены, генерация
+                    комбинаций 1-gram, 2-gram и 3-gram.
+                </div>
+                <div
+                    class="bg-emerald-100 dark:bg-emerald-900/40 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                    <span
+                        class="text-xs font-bold text-emerald-800 dark:text-emerald-200 uppercase tracking-wider block mb-1">Применение</span>
+                    <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Проверка LSI и ключей</p>
+                    <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1">Позволяет наглядно увидеть, какие
+                        фразы доминируют в тексте.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border-l-8 border-blue-500 italic text-gray-700 dark:text-gray-300 shadow-sm">
+        <h4 class="font-black mb-2 text-gray-900 dark:text-gray-100 not-italic uppercase tracking-tighter text-lg">Зачем
+            нужен SEO анализ текста?</h4>
+        Использование точных алгоритмов проверки позволяет создавать контент, который одинаково нравится и
+        пользователям, и поисковым роботам. Контролируйте уровень «воды», следите за плотностью ключевых слов и
+        оптимизируйте естественность текста, чтобы ваш ресурс всегда занимал лидирующие позиции в поисковой выдаче.
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/toastify.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/text_analyzer.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/toastify.css') }}">
+{% endblock %}
