@@ -22,7 +22,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - mysql_data_prod:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
       - serp_network
     healthcheck:
@@ -120,5 +120,5 @@ networks:
 # Volumes (персистентные данные)
 # ============================================================
 volumes:
-  mysql_data_prod:
+  mysql_data:
     driver: local
