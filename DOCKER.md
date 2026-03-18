@@ -5,23 +5,28 @@
 ```
 ├── Dockerfile                    # Образ Flask-приложения
 ├── docker-compose.yml            # DEV: http://localhost
-├── docker-compose.prod.yml       # PROD: https://seoorbita.ru
+├── docker-compose.prod.yml       # PROD: VPS с доменом (HTTPS)
 ├── .env.example                  # Шаблон переменных (скопировать в .env)
 ├── .dockerignore                 # Исключения для образа
+├── init-vps.sh                   # Скрипт первоначальной настройки VPS
 └── docker/
     ├── entrypoint.sh             # Старт: ждёт MySQL → gunicorn
     └── nginx/
         ├── nginx.dev.conf        # Nginx для DEV (HTTP)
-        └── nginx.prod.conf       # Nginx для PROD (HTTPS)
+        └── nginx.prod.conf.template # Шаблон Nginx для PROD (HTTPS) с подстановкой DOMAIN
 ```
 
 ---
 
-## 🖥️ DEV — локальная разработка
+## 🖥️ DEV — локальная разработка (без домена)
+
+Используется для разработки и тестирования проекта на локальном компьютере.
+В этом режиме проект доступен по `http://localhost`, используется конфигурация без генерации SSL сертификатов.
 
 ### Требования
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (или Docker Engine)
+- Docker Compose
 
 ### Шаг 1: Создать `.env`
 
@@ -29,21 +34,24 @@
 cp .env.example .env
 ```
 
-Заполнить в `.env`:
+Заполнить базовые переменные в `.env`:
 
 - `DB_PASSWORD` — любой пароль для MySQL
 - `MYSQL_ROOT_PASSWORD` — root-пароль MySQL
 - `SECRET_KEY` — сгенерировать: `python -c "import secrets; print(secrets.token_hex(24))"`
-- `API_KEY` — ключ XMLRiver
+- `API_KEY` — ключ от сервисов, если требуются.
+*(переменные `DOMAIN` и `LETSENCRYPT_EMAIL` для локального запуска не обязательны)*
 
-### Шаг 2: Запустить
+### Шаг 2: Запустить локально
 
 ```bash
-docker compose up -d --build
+docker-compose up -d --build
 ```
+*(важно использовать `docker-compose.yml`, который применяется по умолчанию при этой команде)*
 
 ### Шаг 3: Открыть
 
+Перейдите в браузере:
 ```
 http://localhost
 ```
@@ -52,99 +60,80 @@ http://localhost
 
 ```bash
 # Посмотреть логи
-docker compose logs -f web
-docker compose logs -f nginx
+docker-compose logs -f web
+docker-compose logs -f nginx
 
 # Остановить
-docker compose down
+docker-compose down
 
 # Остановить и удалить данные БД
-docker compose down -v
+docker-compose down -v
 
 # Перезапустить только web
-docker compose restart web
+docker-compose restart web
 ```
 
 ---
 
-## 🌐 PROD — сервер seoorbita.ru
+## 🌐 PROD — деплой на VPS (с привязкой домена)
+
+Используется для боевого сервера. В этом режиме **автоматически** генерируются рабочие HTTPS сертификаты через Let's Encrypt и происходит привязка домена через обновленный `nginx.prod.conf.template`.
 
 ### Требования
 
-- VPS/сервер с Ubuntu 22.04
-- Docker + Docker Compose installed
-- DNS запись A: `seoorbita.ru` → IP сервера
+- VPS/сервер с Ubuntu 22.04 (или подобный Linux-сервер)
+- Установленные `docker` и `docker-compose`
+- Созданная и обновленная A-запись DNS вашего домена: `ВАШ_ДОМЕН` → IP сервера
 
 ### Шаг 1: Скопировать проект на сервер
 
 ```bash
-scp -r ./serp_docker user@server:/srv/serp
-# или через git clone
+# Например через scp или git clone
+scp -r ./serp_docker root@server:/srv/serp
 ```
 
-### Шаг 2: Создать `.env`
+### Шаг 2: Настроить переменные окружения
 
+Перейдите в папку с проектом на сервере:
 ```bash
 cd /srv/serp
 cp .env.example .env
-nano .env  # заполнить секреты
+nano .env
 ```
 
-В `.env` также установить:
+В файле `.env` **ОБЯЗАТЕЛЬНО** задайте:
 
-```
+```env
+DOMAIN=вашдомен.ru
+LETSENCRYPT_EMAIL=ваш_email@example.com
 MODE=hosting
 ```
+*(Также не забудьте надежные пароли для базы данных и Secret Key)*
 
-### Шаг 3: Получить SSL-сертификат (первый раз)
+### Шаг 3: Автоматический запуск и получение SSL
 
-> ⚠️ Nginx сначала запускается в HTTP-режиме для верификации домена
+Мы подготовили специальный скрипт `init-vps.sh`, который за одну команду запустит сервер, получит сертификаты и привяжет домен.
 
+Делаем скрипт исполняемым и запускаем:
 ```bash
-# 1. Создать директории для Certbot
-mkdir -p certbot/conf certbot/www
-
-# 2. Запустить nginx (временно, только HTTP)
-# В nginx.prod.conf временно закомментировать весь HTTPS-блок (server 443)
-# и в HTTP-блоке убрать redirect, добавить вместо него proxy_pass
-
-# 3. Получить сертификат
-docker compose -f docker-compose.prod.yml run --rm certbot certonly \
-  --webroot \
-  --webroot-path=/var/www/certbot \
-  --email admin@seoorbita.ru \
-  --agree-tos \
-  --no-eff-email \
-  -d seoorbita.ru \
-  -d www.seoorbita.ru
-
-# 4. Убедиться что сертификаты созданы
-ls certbot/conf/live/seoorbita.ru/
+chmod +x ./init-vps.sh
+./init-vps.sh
 ```
 
-### Шаг 4: Запустить всё
+**Готово!** Скрипт выведет: `Успешно! Проект развернут и доступен по адресу: https://вашдомен.ru`.
 
-```bash
-docker compose -f docker-compose.prod.yml up -d --build
-```
+### Обновление приложения в будущем
 
-### Шаг 5: Проверить
-
-```bash
-curl -I https://seoorbita.ru/
-# Ожидается: HTTP/2 200 или 302
-```
-
-### Обновление приложения
+Если вам необходимо обновить проект (без перевыпуска SSL):
 
 ```bash
 git pull
-docker compose -f docker-compose.prod.yml up -d --build web
+docker-compose -f docker-compose.prod.yml up -d --build web
 ```
 
 ### SSL обновляется автоматически
 
-Certbot-сервис в контейнере проверяет и обновляет сертификат каждые 12 часов.
+Раз в полдня (или при старте) работает скрытый контейнер `certbot`, который без простоев проверяет необходимость продления SSL-сертификата. Вам ничего делать не нужно.
 
 ---
 

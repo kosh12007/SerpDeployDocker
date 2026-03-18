@@ -69,14 +69,19 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      # Prod-конфигурация с SSL
-      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      # Prod-конфигурация с SSL (шаблон)
+      - ./docker/nginx/nginx.prod.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+
+
       # Статика
       - ./static:/app/static:ro
       # SSL-сертификаты от Let's Encrypt
       - ./certbot/conf:/etc/letsencrypt:ro
       # Директория для верификации Certbot
       - ./certbot/www:/var/www/certbot:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
     depends_on:
       - web
     networks:

@@ -1,7 +1,7 @@
 # ===============================================================
 # Nginx конфигурация для PROD-окружения
 # HTTPS с SSL от Let's Encrypt (Certbot)
-# Домен: https://seoorbita.ru
+# Домен: https://${DOMAIN}
 # ===============================================================
 
 worker_processes auto;
@@ -47,7 +47,7 @@ http {
     # ============================================================
     server {
         listen 80;
-        server_name seoorbita.ru www.seoorbita.ru;
+        server_name ${DOMAIN} www.${DOMAIN};
 
         # Директория для верификации Certbot (Let's Encrypt)
         location /.well-known/acme-challenge/ {
@@ -56,7 +56,7 @@ http {
 
         # Все остальные HTTP-запросы → перенаправляем на HTTPS
         location / {
-            return 301 https://seoorbita.ru$request_uri;
+            return 301 https://${DOMAIN}$request_uri;
         }
     }
 
@@ -65,11 +65,11 @@ http {
     # ============================================================
     server {
         listen 443 ssl;
-        server_name seoorbita.ru www.seoorbita.ru;
+        server_name ${DOMAIN} www.${DOMAIN};
 
         # --- SSL-сертификаты от Let's Encrypt ---
-        ssl_certificate     /etc/letsencrypt/live/seoorbita.ru/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/seoorbita.ru/privkey.pem;
+        ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
 
         # Настройки SSL (рекомендации Mozilla)
         ssl_protocols             TLSv1.2 TLSv1.3;
