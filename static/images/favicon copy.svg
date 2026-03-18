@@ -1,0 +1,29 @@
+<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+
+ <!-- Большой график -->
+ <!-- Крупная лупа справа -->
+ <!-- Ручка лупы, начинается выше середины окружности -->
+     <style>
+      .b {
+        fill: none;
+        stroke: #285dee; /* white orbits */
+        stroke-width: 8px;
+      }
+      .c {
+        fill: none;
+        stroke: #8ca5eb; /* white orbits */
+        stroke-width: 6px;
+      }
+    </style>
+ <g>
+  <title>Layer 1</title>
+  <!-- <rect x="0" y="0" id="svg_1" fill="#1e3a8a" rx="10" height="64" width="64"/> -->
+  <!-- <polyline stroke="white" id="svg_2" stroke-linecap="round" fill="none" stroke-width="4" points="6.857144355773926,37.7142839262944 19.000001907348633,16.1904726027455 31.142858505249023,26.952379201608608 43.28571319580078,5.428567409515381 55.42856979370117,19.77777167873768 "/> -->
+  <!-- <circle transform="rotate(16.294 45.1429 43.7143)" stroke-dasharray="5,2,2,2,2,2" stroke="white" id="svg_3" fill="none" stroke-width="4" r="14.57143" cy="32" cx="40"/> -->
+  <!-- <line transform="rotate(16.7673 16.5 50.7857)" stroke="white" id="svg_4" stroke-linecap="round" stroke-width="4" y2="43" x2="7" y1="35.61049" x1="20"/> -->
+   <ellipse class="b" cx="50" cy="25" rx="32" ry="13" transform="rotate(-45 50 50)" stroke="white" />
+  <ellipse class="c" cx="25" cy="50" rx="32" ry="13" transform="rotate(45 50 50)" stroke="white" />
+
+ </g>
+ 
+</svg>

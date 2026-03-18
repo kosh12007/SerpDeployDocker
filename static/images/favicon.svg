@@ -1,13 +1,36 @@
-<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 128 128" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="orb1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ffff"/>
+      <stop offset="100%" stop-color="#0055ff"/>
+    </linearGradient>
+    <linearGradient id="orb2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0088ff"/>
+      <stop offset="100%" stop-color="#0022cc"/>
+    </linearGradient>
+  </defs>
 
- <!-- Большой график -->
- <!-- Крупная лупа справа -->
- <!-- Ручка лупы, начинается выше середины окружности -->
- <g>
-  <title>Layer 1</title>
-  <rect x="0" y="0" id="svg_1" fill="#4f46e5" rx="10" height="64" width="64"/>
-  <polyline stroke="white" id="svg_2" stroke-linecap="round" fill="none" stroke-width="4" points="6.857144355773926,37.7142839262944 19.000001907348633,16.1904726027455 31.142858505249023,26.952379201608608 43.28571319580078,5.428567409515381 55.42856979370117,19.77777167873768 "/>
-  <circle transform="rotate(16.294 45.1429 43.7143)" stroke-dasharray="5,2,2,2,2,2" stroke="white" id="svg_3" fill="none" stroke-width="4" r="14.57143" cy="43.71429" cx="45.14286"/>
-  <line transform="rotate(16.7673 16.5 50.7857)" stroke="white" id="svg_4" stroke-linecap="round" stroke-width="4" y2="55.96093" x2="7.08407" y1="45.61049" x1="25.91592"/>
- </g>
+  <!-- Темный фон со скругленными краями (радиус 32) -->
+  <rect width="128" height="128" fill="#020612" rx="32"/>
+
+  <g transform="translate(64, 64)">
+    
+    <!-- Орбита 1 (повернута строго на -45 градусов, чтобы ее вершины (радиусы) смотрели ровно в углы скругленного фона) -->
+    <g transform="rotate(-45)">
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="#00ffff" stroke-width="20" opacity="0.2"/>
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="url(#orb1)" stroke-width="12"/>
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+    </g>
+
+    <!-- Орбита 2 (повернута строго на +45 градусов, идет в противоположные углы) -->
+    <g transform="rotate(45)">
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="#0088ff" stroke-width="20" opacity="0.2"/>
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="url(#orb2)" stroke-width="12"/>
+      <ellipse cx="0" cy="0" rx="76" ry="26" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+    </g>
+
+    <!-- Центральная буква S -->
+    <text x="0" y="28" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="82" fill="#020612" stroke="#020612" stroke-width="14" stroke-linejoin="round" text-anchor="middle">S</text>
+    <text x="0" y="28" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-size="82" fill="#ffffff" text-anchor="middle">S</text>
+  </g>
 </svg>
