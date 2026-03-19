@@ -1,8 +1,20 @@
-from flask import Blueprint, render_template, make_response
+from flask import Blueprint, render_template, make_response, current_app, send_from_directory, abort
 from app.services.sitemap_service import SitemapService
 from datetime import datetime, timezone
+import os
 
 seo_routes = Blueprint("seo", __name__)
+
+
+@seo_routes.route("/<path:filename>")
+def serve_verification_file(filename):
+    """Служит файлы верификации (Яндекс, Google) из папки public."""
+    # Разрешаем только .html файлы верификации для безопасности
+    if (filename.startswith("yandex_") or filename.startswith("google")) and filename.endswith(".html"):
+        public_dir = os.path.join(current_app.root_path, "..", "public")
+        if os.path.exists(os.path.join(public_dir, filename)):
+            return send_from_directory(public_dir, filename)
+    abort(404)
 
 
 @seo_routes.route("/robots.txt")
