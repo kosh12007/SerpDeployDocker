@@ -52,6 +52,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./static:/app/static:ro
+      - ./public:/app/public:ro
     depends_on:
       db:
         condition: service_healthy

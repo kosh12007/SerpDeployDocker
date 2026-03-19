@@ -58,6 +58,7 @@ services:
       - ./logs:/app/logs
       # Статика монтируется для чтения Nginx
       - ./static:/app/static:ro
+      - ./public:/app/public:ro
     depends_on:
       db:
         condition: service_healthy
