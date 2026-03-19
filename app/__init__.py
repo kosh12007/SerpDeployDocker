@@ -148,6 +148,7 @@ from .blueprints.dashboard.dashboard_routes import dashboard_bp
 from .blueprints.text_analyzer_routes import text_analyzer_routes
 from .blueprints.seo_routes import seo_routes
 from .uniqueness.routes import uniqueness_bp
+from .text_converter.routes import text_converter_bp
 
 application.register_blueprint(auth_bp, url_prefix="/auth")
 application.register_blueprint(main_routes)
@@ -169,6 +170,7 @@ application.register_blueprint(dashboard_bp)
 application.register_blueprint(text_analyzer_routes)
 application.register_blueprint(seo_routes)
 application.register_blueprint(uniqueness_bp)
+application.register_blueprint(text_converter_bp)
 init_logger.debug("Blueprints успешно зарегистрированы")
 
 from .db.database import init_db

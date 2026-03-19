@@ -1,0 +1,206 @@
+{% extends "layout.html" %}
+
+{% block title %}Конвертер текста - SEO орбита{% endblock %}
+{% block meta_description %}Инструмент для конвертации и транслитерации текста. Отлично подходит для создания ЧПУ URL
+или перевода ФИО по стандарту паспорта.{% endblock %}
+{% block meta_keywords %}конвертер текста, транслитерация, ЧПУ URL, транслит паспорта РФ, форматирование текста{%
+endblock %}
+
+{% from "components/info_block.html" import render_info_block %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Конвертер текста</h1>
+
+    {% set info_content %}
+    <p>Многофункциональный инструмент для преобразования и транслитерации текста в режиме реального времени.</p>
+    <ul class="list-disc list-inside mt-2">
+        <li><strong>Для URL:</strong> Идеально подходит для создания человеко-понятных URL (ЧПУ). Транслитерирует
+            кириллицу, удаляет спецсимволы и заменяет пробелы выбранным разделителем.</li>
+        <li><strong>На паспорт:</strong> Производит строгую транслитерацию кириллических символов по правилам
+            транслитерации МИД РФ (ICAO), применяемым для загранпаспортов.</li>
+        <li><strong>Доп. опции:</strong> Настройка регистра букв и разделителей слов позволяет моментально подстроить
+            результат под ваши нужды.</li>
+    </ul>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400"><em>Ваш текст автоматически сохраняется в браузере и не
+            потеряется при случайной перезагрузке страницы.</em></p>
+    {% endset %}
+    {{ render_info_block("Описание функционала", info_content) }}
+
+    <div class="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
+        <form id="tool-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Левая колонка: Ввод и вывод -->
+                <div class="flex flex-col h-full space-y-4">
+                    <div class="flex-grow flex flex-col relative">
+                        <label for="text-input"
+                            class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Введите ваш
+                            текст:</label>
+                        <textarea name="text" id="text-input" placeholder="Введите ваш текст..." rows="6"
+                            class="flex-grow shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-y min-h-[120px]"
+                            spellcheck="false"></textarea>
+                        <span id="save-status"
+                            class="absolute top-0 right-0 text-xs text-green-600 dark:text-green-400 opacity-0 transition-opacity duration-500 mt-1 mr-1">Текст
+                            сохранен</span>
+                    </div>
+
+                    <div class="flex-grow flex flex-col">
+                        <label for="tool-result"
+                            class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Результат:</label>
+                        <textarea placeholder="Результат..." rows="6"
+                            class="flex-grow shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-y min-h-[120px]"
+                            id="tool-result" readonly></textarea>
+                    </div>
+
+                    <div class="mt-2 text-right">
+                        <button type="button" id="copy-result-btn"
+                            class="action-btn-1 flex items-center justify-center w-full md:w-auto ml-auto gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span>Копировать результат</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Правая колонка: Настройки -->
+                <div>
+                    <div class="mb-5">
+                        <label for="mode-field"
+                            class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Назначение
+                            транслитерации</label>
+                        <select name="options[mode]" id="mode-field"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline cursor-pointer">
+                            <option value="url">Для URL (ЧПУ)</option>
+                            <option value="passport">На паспорт РФ (ICAO)</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">"Для URL" использует упрощенный транслит, "На паспорт" -
+                            строгий стандарт ICAO.</p>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="word-delimiter-field"
+                            class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Разделитель
+                            слов</label>
+                        <select name="options[word_delimiter]" id="word-delimiter-field"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline cursor-pointer">
+                            <option value="hyphen" selected="selected">Дефис (-)</option>
+                            <option value="underline">Нижнее подчеркивание (_)</option>
+                            <option value="space">Пробел ( )</option>
+                            <option value="none">Без разделителя</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="case-field"
+                            class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Регистр слов</label>
+                        <select name="options[case]" id="case-field"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline cursor-pointer">
+                            <option value="lower">В нижнем регистре</option>
+                            <option value="upper">В верхнем регистре</option>
+                            <option value="camel">Кэмелкейс (camelCase)</option>
+                            <option value="original" selected="selected">Как в оригинале</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- SEO Описание -->
+    <section id="seo-description"
+        class="mt-12 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 transition-all duration-300">
+        <h2
+            class="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 text-center">
+            Конвертер текста и транслитерация: создание ЧПУ URL и перевод
+        </h2>
+
+        <p class="text-lg text-gray-700 dark:text-gray-300 mb-8 leading-relaxed text-center max-w-4xl mx-auto">
+            Инструмент осуществляет транслитерацию кириллических символов в латиницу. Процесс выполняется в браузере,
+            обеспечивая моментальную конвертацию текстов любого объема. Доступны два основных режима обработки:
+            генерация ЧПУ-ссылок для веб-ресурсов путем фильтрации спецсимволов и нормализации пробелов, а также
+            преобразование по стандарту ICAO для оформления официальных документов. Имеется функционал конфигурации
+            пользовательских разделителей и принудительного изменения регистра букв (включая camelCase).
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <!-- ЧПУ URL -->
+            <div
+                class="flex flex-col p-6 bg-blue-50 dark:bg-gray-700/50 rounded-xl border border-blue-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+                <h3 class="text-xl font-bold mb-3 text-blue-700 dark:text-blue-300 flex items-center">
+                    <span
+                        class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 text-base shadow-inner">1</span>
+                    ЧПУ URL и ранжирование
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                    Транслитерация играет важнейшую роль во внутренней оптимизации. Использование человекопонятных (ЧПУ)
+                    URL позитивно сказывается на поведенческих факторах и является значимым фактором ранжирования в
+                    Яндекс и Google. Правильный адрес страницы подсказывает поисковым роботам её тематику.
+                </p>
+            </div>
+
+            <!-- Правильная ссылка -->
+            <div
+                class="flex flex-col p-6 bg-indigo-50 dark:bg-gray-700/50 rounded-xl border border-indigo-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+                <h3 class="text-xl font-bold mb-3 text-indigo-700 dark:text-indigo-300 flex items-center">
+                    <span
+                        class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-3 text-base shadow-inner">2</span>
+                    Структура ссылок
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                    Например, для страницы под запрос "группировка запросов", правильный вариант URL:
+                    <code>/grupirovka-zaprosov/</code>. Использование неинформативных ссылок (например,
+                    <code>/page-123/</code>) снижает релевантность документа и усложняет навигацию для посетителей
+                    сайта.
+                </p>
+            </div>
+
+            <!-- Стандарт ICAO -->
+            <div
+                class="flex flex-col p-6 bg-purple-50 dark:bg-gray-700/50 rounded-xl border border-purple-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+                <h3 class="text-xl font-bold mb-3 text-purple-700 dark:text-purple-300 flex items-center">
+                    <span
+                        class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mr-3 text-base shadow-inner">3</span>
+                    Стандарт ICAO для паспорта
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                    Помимо SEO-задач, инструмент поддерживает строгую транслитерацию кириллических символов по
+                    международным стандартам ICAO. Это гарантирует безошибочный перевод имени и фамилии точно так же,
+                    как они будут напечатаны в загранпаспорте РФ или применяться в авиабилетах.
+                </p>
+            </div>
+
+            <!-- Преимущества -->
+            <div
+                class="flex flex-col p-6 bg-emerald-50 dark:bg-gray-700/50 rounded-xl border border-emerald-100 dark:border-gray-600 hover:shadow-lg transition-all duration-300">
+                <h3 class="text-xl font-bold mb-3 text-emerald-700 dark:text-emerald-300 flex items-center">
+                    <span
+                        class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center mr-3 text-base shadow-inner">4</span>
+                    Преимущества инструмента
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 flex-grow">
+                    Главный принцип нашего сервиса - высокая скорость и отсутствие лишних элементов. Все преобразования
+                    происходят прямо в браузере в режиме реального времени. Мы оставили только те настройки, которые
+                    реально необходимы для оптимизаторов, вебмастеров и копирайтеров.
+                </p>
+            </div>
+        </div>
+
+        <div
+            class="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border-l-8 border-blue-500 italic text-gray-700 dark:text-gray-300 shadow-sm">
+            <h4 class="font-black mb-2 text-gray-900 dark:text-gray-100 not-italic uppercase tracking-tighter text-lg">
+                SEO орбита рекомендует</h4>
+            Всегда используйте семантические (ЧПУ) URL на продвигаемых страницах сайта. Убедитесь, что в адресе
+            присутствует основное вхождение продвигаемого запроса, а пробелы заменены на дефисы. Качественный транслит
+            повышает кликабельность (CTR) сниппета и доверие со стороны пользователей и поисковых систем.
+        </div>
+    </section>
+</div>
+
+<!-- Load text_converter script -->
+<script src="{{ url_for('static', filename='js/text_converter.js') }}"></script>
+{% endblock %}
