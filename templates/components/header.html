@@ -1,8 +1,15 @@
 <header class="bg-white dark:bg-gray-800 shadow-md">
     <div class="mx-auto py-2 pl-4 pr-20 md:pr-20 lg:pr-4 flex justify-between items-center">
         <div class="flex items-center space-x-4">
-            <h1 class="text-xl font-bold"><a href="{{ url_for('main.index') }}"
-                    class="text-gray-900 dark:text-dark-text no-underline">SEO орбита</a></h1>
+            <div class="text-xl font-bold">
+                <a href="{{ url_for('main.index') }}"
+                    class="flex items-center text-gray-900 dark:text-dark-text no-underline"
+                    aria-label="СЕО Орбита - главная страница">
+                    <img src="{{ url_for('static', filename='images/favicon.svg') }}" alt="Логотип"
+                        class="w-6 h-6 mr-2 filter drop-shadow-sm">
+                    <span>SEO орбита</span>
+                </a>
+            </div>
 
             {% if current_user.is_authenticated %}
             <!-- Селектор проектов (скрыт на мобильных, перенесён в нижнюю панель) -->
