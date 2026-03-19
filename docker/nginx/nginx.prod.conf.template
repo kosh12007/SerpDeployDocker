@@ -27,6 +27,9 @@ http {
     tcp_nodelay on;
     keepalive_timeout 65;
 
+    # Склеиваем множественные слеши на уровне http
+    merge_slashes on;
+
     # Увеличиваем лимит для загрузки файлов (Excel, CSV)
     client_max_body_size 50M;
 
@@ -42,8 +45,8 @@ http {
     }
 
     # ============================================================
-    # Сервер 1: HTTP → редирект на HTTPS
-    # Также обслуживает .well-known/acme-challenge для Certbot
+    # Сервер 1: HTTP (порт 80)
+    # Прямой редирект на основное зеркало HTTPS без-www
     # ============================================================
     server {
         listen 80;
@@ -54,18 +57,32 @@ http {
             root /var/www/certbot;
         }
 
-        # Все остальные HTTP-запросы → перенаправляем на HTTPS (основной домен)
+        # Редирект на HTTPS основной домен со склейкой слешей
         location / {
             return 301 https://${DOMAIN}$uri$is_args$args;
         }
     }
 
     # ============================================================
-    # Сервер 2: HTTPS (основной)
+    # Сервер 2: HTTPS (порт 443) - только WWW (редирект)
     # ============================================================
     server {
         listen 443 ssl;
-        server_name ${DOMAIN} www.${DOMAIN};
+        server_name www.${DOMAIN};
+
+        ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+
+        # Прямой редирект на основной домен со склейкой слешей
+        return 301 https://${DOMAIN}$uri$is_args$args;
+    }
+
+    # ============================================================
+    # Сервер 3: HTTPS (порт 443) - ОСНОВНОЙ
+    # ============================================================
+    server {
+        listen 443 ssl;
+        server_name ${DOMAIN};
 
         # --- SSL-сертификаты от Let's Encrypt ---
         ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
@@ -80,24 +97,17 @@ http {
         ssl_stapling              on;
         ssl_stapling_verify       on;
 
-        # Безопасность: HSTS (браузер всегда будет ходить по HTTPS)
+        # Безопасность: HSTS
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
 
-        # --- SEO Редиректы ---
-
-        # 1. Редирект с www на без-www
-        if ($http_host ~* "^www\.") {
-            return 301 https://${DOMAIN}$uri$is_args$args;
-        }
-
-        # 2. Склейка множественных слешей (например, /// -> /)
+        # Склейка множественных слешей внутри HTTPS (если не www)
         if ($request_uri ~* "//") {
             return 301 $scheme://$host$uri$is_args$args;
         }
 
-        # Статические файлы — отдаём Nginx напрямую (без Flask)
+        # Статические файлы — отдаём Nginx напрямую
         location /static/ {
             alias /app/static/;
             expires 30d;
@@ -115,7 +125,7 @@ http {
             proxy_set_header   X-Forwarded-Proto $scheme;
             proxy_set_header   Connection        "";
 
-            # Таймауты для долгих операций (парсинг SERP)
+            # Таймауты для долгих операций
             proxy_connect_timeout 60s;
             proxy_read_timeout    300s;
             proxy_send_timeout    300s;
