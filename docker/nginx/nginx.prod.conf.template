@@ -54,9 +54,9 @@ http {
             root /var/www/certbot;
         }
 
-        # Все остальные HTTP-запросы → перенаправляем на HTTPS
+        # Все остальные HTTP-запросы → перенаправляем на HTTPS (основной домен)
         location / {
-            return 301 https://${DOMAIN}$request_uri;
+            return 301 https://${DOMAIN}$uri$is_args$args;
         }
     }
 
@@ -84,6 +84,18 @@ http {
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header X-Content-Type-Options "nosniff" always;
+
+        # --- SEO Редиректы ---
+
+        # 1. Редирект с www на без-www
+        if ($http_host ~* "^www\.") {
+            return 301 https://${DOMAIN}$uri$is_args$args;
+        }
+
+        # 2. Склейка множественных слешей (например, /// -> /)
+        if ($request_uri ~* "//") {
+            return 301 $scheme://$host$uri$is_args$args;
+        }
 
         # Статические файлы — отдаём Nginx напрямую (без Flask)
         location /static/ {
