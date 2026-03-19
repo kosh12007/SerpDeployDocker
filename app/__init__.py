@@ -2,6 +2,7 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_caching import Cache
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import secrets
 from datetime import datetime, timezone
@@ -24,6 +25,9 @@ application = Flask(__name__, static_folder="../static", template_folder="../tem
 from .config import Config, MailConfig  # Импортируем MailConfig
 
 application.config.from_object(Config)
+
+# Применяем ProxyFix для корректной работы через Nginx (определение https)
+application.wsgi_app = ProxyFix(application.wsgi_app, x_proto=1, x_host=1)
 
 # Устанавливаем секретный ключ из загруженной конфигурации
 application.secret_key = application.config["SECRET_KEY"]
