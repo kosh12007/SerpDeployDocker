@@ -59,6 +59,7 @@ class MailConfig:
 
 class Config(XmlRiverConfig, CacheConfig, MailConfig):
     """Объединенный класс конфигурации."""
+    MODE = MODE
     # ВАЖНО: Секретный ключ должен быть постоянным и загружаться из переменных окружения.
     # Если ключ не задан, приложение не должно запускаться в production.
     SECRET_KEY = os.getenv("SECRET_KEY")
