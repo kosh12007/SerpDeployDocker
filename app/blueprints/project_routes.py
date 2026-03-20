@@ -100,7 +100,8 @@ def create_project():
                 cursor.close()
                 conn.close()
 
-        return redirect(url_for("project_routes.project_list"))
+        return redirect(url_for("project_routes.project_detail", project_id=project_id))
+
 
     return render_template("projects/create_project.html")
 

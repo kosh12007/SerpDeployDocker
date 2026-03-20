@@ -27,18 +27,54 @@ endblock %}
     <div class="mb-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Выбор проекта -->
-            <div>
-                <label for="project-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Выберите
-                    проект</label>
-                <select id="project-select"
-                    class="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600">
-                    <option value="">-- Выберите проект --</option>
-                    {% if projects %}
-                    {% for project in projects %}
-                    <option value="{{ project.id }}">{{ project.name }}</option>
-                    {% endfor %}
-                    {% endif %}
-                </select>
+            <div class="relative w-full" id="project-dropdown-container">
+                <label for="project-custom-select"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Выберите проект</label>
+                <div id="project-custom-select"
+                    class="mt-1 w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 flex justify-between items-center cursor-pointer">
+                    <span id="project-selected-text">-- Выберите проект --</span>
+                    <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="project-options-container"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg hidden">
+                    <!-- Поле поиска (ПЕРВОЕ) -->
+                    <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                        <input type="text" id="project-search-input-clustering" placeholder="Поиск проекта..."
+                            class="w-full p-2 text-sm border rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Ссылка на создание проекта (ВТОРАЯ) -->
+                    <a href="{{ url_for('project_routes.create_project') }}"
+                        class="block p-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 no-underline">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-4 h-4 mr-1" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Создать проект
+                    </a>
+
+                    <!-- Список проектов -->
+                    <div id="project-options-list" class="max-h-60 overflow-y-auto">
+                        <!-- <div class="project-option p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm" data-value="" data-name="-- Выберите проект --">
+                            -- Выберите проект --
+                        </div> -->
+                        {% if projects %}
+                        {% for project in projects %}
+                        <div class="project-option p-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm"
+                            data-value="{{ project.id }}" data-name="{{ project.name }}">
+                            {{ project.name }}
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Скрытый инпут для совместимости с существующим JS -->
+                <input type="hidden" id="project-select" name="project_id" value="">
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Загрузит ключевые слова из выбранного проекта.
                 </p>
             </div>
@@ -74,6 +110,31 @@ endblock %}
         <!-- Можно добавить иконку спиннера -->
     </div>
 
+    <!-- Блок "Добавить запросы", если проект пуст -->
+    <div id="add-queries-container" class="hidden mb-8 p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg border-2 border-blue-100 dark:border-blue-900">
+        <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h2 class="text-xl font-semibold">В проекте нет запросов</h2>
+        </div>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">Чтобы выполнить кластеризацию, сначала добавьте поисковые запросы в проект.</p>
+        
+        <form id="add-queries-form-clustering" class="space-y-4">
+            <div>
+                <label for="queries_text_clustering" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Поисковые запросы (по одному на строку)</label>
+                <textarea id="queries_text_clustering" rows="5" class="w-full p-3 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="купить слона&#10;продать слона"></textarea>
+            </div>
+            <div>
+                <label for="group_name_clustering" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Название группы (необязательно)</label>
+                <input type="text" id="group_name_clustering" class="w-full p-2 border rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Базовая группа">
+            </div>
+            <button type="submit" id="add-queries-submit" class="action-btn-2 py-2 px-6 rounded font-bold">
+                Добавить запросы и начать
+            </button>
+        </form>
+    </div>
+
     <!-- Результаты -->
     <div id="results-container" class="hidden">
         <div class="flex justify-between items-center mb-4">
@@ -89,13 +150,13 @@ endblock %}
                 class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-dashed border-gray-300">
                 <h4 class="text-lg font-semibold text-gray-500 dark:text-gray-300 mb-4 uppercase tracking-wider">Было
                     (Текущие группы)</h4>
-                <div id="was-container" class="space-y-4 max-h-[60vh] overflow-y-auto"></div>
+                <div id="was-container" class="space-y-4 max-h-[60vh] overflow-y-auto pt-2"></div>
             </div>
             <!-- Колонка "Стало" -->
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200">
+            <div id="became-column" class="hidden bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200">
                 <h4 class="text-lg font-semibold text-blue-600 dark:text-blue-400 mb-4 uppercase tracking-wider">Стало
                     (Новая Hard-группировка)</h4>
-                <div id="became-container" class="space-y-4 max-h-[60vh] overflow-y-auto"></div>
+                <div id="became-container" class="space-y-4 max-h-[60vh] overflow-y-auto pt-2"></div>
             </div>
         </div>
     </div>
@@ -121,28 +182,156 @@ endblock %}
         let currentThreshold = 3;
         let currentProjectId = null;
 
+        // --- Логика кастомного выпадающего списка объектов ---
+        const customSelect = document.getElementById('project-custom-select');
+        const optionsContainer = document.getElementById('project-options-container');
+        const searchInput = document.getElementById('project-search-input-clustering');
+        const optionsList = document.getElementById('project-options-list');
+        const selectedText = document.getElementById('project-selected-text');
+        const projectOptions = document.querySelectorAll('.project-option');
+
+        // Открытие/закрытие
+        customSelect.addEventListener('click', (e) => {
+            e.stopPropagation();
+            optionsContainer.classList.toggle('hidden');
+            if (!optionsContainer.classList.contains('hidden')) {
+                searchInput.value = '';
+                projectOptions.forEach(opt => opt.classList.remove('hidden'));
+                searchInput.focus();
+            }
+        });
+
+        // Закрытие при клике снаружи
+        document.addEventListener('click', (e) => {
+            if (!customSelect.contains(e.target) && !optionsContainer.contains(e.target)) {
+                optionsContainer.classList.add('hidden');
+            }
+        });
+
+        // Поиск/фильтрация
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase().trim();
+            projectOptions.forEach(option => {
+                const name = option.dataset.name.toLowerCase();
+                if (name.includes(term)) {
+                    option.classList.remove('hidden');
+                } else {
+                    option.classList.add('hidden');
+                }
+            });
+        });
+
+        // Выбор варианта
+        projectOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const val = option.dataset.value;
+                const name = option.dataset.name;
+
+                projectSelect.value = val;
+                selectedText.textContent = name;
+                optionsContainer.classList.add('hidden');
+
+                // Триггерим событие change для совместимости с существующим кодом
+                projectSelect.dispatchEvent(new Event('change'));
+            });
+        });
+        // --- Конец логики кастомного списка ---
+
         thresholdSlider.addEventListener('input', (e) => {
             currentThreshold = e.target.value;
             thresholdValueSpan.textContent = currentThreshold;
         });
 
-        projectSelect.addEventListener('change', (e) => {
+        projectSelect.addEventListener('change', async (e) => {
             currentProjectId = e.target.value ? parseInt(e.target.value, 10) : null;
             const clusterEditorBtn = document.getElementById('cluster-editor-btn');
+            const addQueriesContainer = document.getElementById('add-queries-container');
+            const becameColumn = document.getElementById('became-column');
 
             applyBtn.classList.toggle('hidden', !currentProjectId);
             clusterEditorBtn.classList.toggle('hidden', !currentProjectId);
+            
+            // Сбрасываем контейнеры
+            addQueriesContainer.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            becameColumn.classList.add('hidden');
+            wasContainer.innerHTML = '';
+            becameContainer.innerHTML = '';
 
             if (currentProjectId) {
                 const editorUrl = `{{ url_for('cluster_editor_bp.cluster_editor', project_id=0) }}`.replace('0', currentProjectId);
-                // Установка href для кнопки не будет работать, нужно обработать событие click
                 clusterEditorBtn.onclick = function () {
                     window.location.href = editorUrl;
                 };
+
+                // Автоматически подгружаем текущие группы ("Было")
+                try {
+                    const response = await fetch(`/api/clusters/was/${currentProjectId}`);
+                    if (!response.ok) throw new Error('Ошибка при загрузке текущих групп');
+                    const data = await response.json();
+                    
+                    if (data.was && data.was.length > 0) {
+                        // Если запросы есть
+                        renderWas(data.was);
+                        resultsContainer.classList.remove('hidden');
+                    } else {
+                        // Если проект пуст - показываем форму добавления
+                        addQueriesContainer.classList.remove('hidden');
+                    }
+                } catch (err) {
+                    console.error('Ошибка загрузки текущих групп:', err);
+                }
+            }
+        });
+
+        // Обработка формы добавления запросов
+        const addQueriesForm = document.getElementById('add-queries-form-clustering');
+        addQueriesForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentProjectId) return;
+
+            const queriesText = document.getElementById('queries_text_clustering').value.trim();
+            const groupName = document.getElementById('group_name_clustering').value.trim();
+
+            if (!queriesText) {
+                alert('Введите хотя бы один поисковый запрос');
+                return;
             }
 
-            if (!currentProjectId) {
-                resultsContainer.classList.add('hidden');
+            const submitBtn = document.getElementById('add-queries-submit');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Добавление...';
+
+            try {
+                const queries = queriesText.split('\n')
+                    .map(q => q.trim())
+                    .filter(q => q.length > 0)
+                    .map(q => ({ text: q, group: groupName || null }));
+
+                const response = await fetch(`/api/projects/${currentProjectId}/queries`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ queries: queries })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Ошибка при добавлении запросов');
+                }
+
+                // После успеха - триггерим обновление "Было"
+                projectSelect.dispatchEvent(new Event('change'));
+                document.getElementById('queries_text_clustering').value = '';
+                document.getElementById('group_name_clustering').value = '';
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Добавить запросы и начать';
             }
         });
 
@@ -153,7 +342,6 @@ endblock %}
             }
 
             spinner.classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
             previewBtn.disabled = true;
 
             try {
@@ -174,6 +362,7 @@ endblock %}
                 const data = await response.json();
                 renderComparison(data.was, data.became);
                 resultsContainer.classList.remove('hidden');
+                document.getElementById('became-column').classList.remove('hidden');
 
             } catch (error) {
                 console.error(error);
@@ -222,14 +411,14 @@ endblock %}
             }
         });
 
-        function renderComparison(wasData, becameData) {
-            if (currentProjectId) {
-                wasContainer.innerHTML = wasData && wasData.length > 0 ? wasData.map(renderGroup).join('') : '<p class="text-gray-500">Текущих групп в проекте нет.</p>';
-                wasColumn.classList.remove('hidden');
-            } else {
-                wasColumn.classList.add('hidden');
-            }
+        function renderWas(wasData) {
+            wasContainer.innerHTML = wasData && wasData.length > 0
+                ? wasData.map(renderGroup).join('')
+                : '<div class="p-4 text-gray-500 italic">На текущий момент группы в проекте отсутствуют.</div>';
+        }
 
+        function renderComparison(wasData, becameData) {
+            renderWas(wasData);
             becameContainer.innerHTML = becameData && becameData.length > 0 ? becameData.map(renderGroup).join('') : '<p class="text-gray-500">Не удалось создать новые группы.</p>';
         }
 

@@ -150,6 +150,41 @@ def preview_clustering():
         return jsonify({"error": "Внутренняя ошибка сервера при кластеризации"}), 500
 
 
+@clustering_bp.route("/was/<int:project_id>", methods=["GET"])
+@login_required
+def get_was_clusters(project_id):
+    """
+    Возвращает текущую структуру групп ("было") для проекта.
+    """
+    try:
+        # Проверка доступа к проекту
+        project = Project.get_by_id(project_id)
+        if not project or project.user_id != current_user.id:
+            if LOGGING_ENABLED:
+                logger.warning(
+                    f"Проект ID: {project_id} не найден или нет доступа для пользователя ID: {current_user.id}"
+                )
+            return jsonify({"error": "Проект не найден или у вас нет доступа"}), 404
+
+        if LOGGING_ENABLED:
+            logger.info(f"Запрос текущих групп для проекта ID: {project_id}")
+
+        # Передаем threshold=3 как значение по умолчанию, так как конструктор требует его,
+        # хотя для получения текущих групп (get_current_groups) он не используется.
+        with HardClusterizer(project_id=project_id, threshold=3) as clusterizer:
+            # Получаем текущую структуру групп ("было")
+            was_data = clusterizer.get_current_groups()
+
+        return jsonify({"was": was_data})
+    except Exception as e:
+        if LOGGING_ENABLED:
+            logger.error(
+                f"Ошибка при получении текущих групп для проекта {project_id}: {e}",
+                exc_info=True,
+            )
+        return jsonify({"error": "Внутренняя ошибка сервера"}), 500
+
+
 @clustering_bp.route("/apply", methods=["POST"])
 @login_required
 def apply_clustering():

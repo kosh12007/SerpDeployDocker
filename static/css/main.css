@@ -3214,6 +3214,42 @@ video {
   border-left-color: #60a5fa;
 }
 
+.create-project-link {
+  display: flex !important;
+  align-items: center;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: #2563eb !important;
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+}
+
+.dark .create-project-link {
+  color: #60a5fa !important;
+  background-color: #1e293b !important;
+  border-bottom-color: #374151 !important;
+}
+
+.create-project-link:hover {
+  background-color: #f1f5f9 !important;
+  color: #1d4ed8 !important;
+}
+
+.dark .create-project-link:hover {
+  background-color: #334155 !important;
+  color: #93c5fd !important;
+}
+
+.create-project-link svg {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+}
+
 /* Название проекта */
 
 .project-selector-item-name {

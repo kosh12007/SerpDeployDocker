@@ -207,8 +207,19 @@ class ProjectSelector {
     renderProjects(projects) {
         if (!this.projectsList) return;
 
+        // Добавляем ссылку на создание проекта (всегда первая в списке)
+        const createProjectHtml = `
+            <a href="/projects/create" class="create-project-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Создать проект
+            </a>
+        `;
+
         if (projects.length === 0) {
-            this.projectsList.innerHTML = `
+            this.projectsList.innerHTML = createProjectHtml + `
                 <div class="project-selector-empty">
                     Проекты не найдены
                 </div>
@@ -219,7 +230,7 @@ class ProjectSelector {
         // Получаем текущий выбранный проект
         const selectedId = this.getSelectedProjectId();
 
-        this.projectsList.innerHTML = projects.map(project => `
+        const projectsHtml = projects.map(project => `
             <div class="project-selector-item ${project.id == selectedId ? 'active' : ''}" 
                  data-id="${project.id}" 
                  data-name="${this.escapeHtml(project.name)}">
@@ -228,8 +239,10 @@ class ProjectSelector {
             </div>
         `).join('');
 
-        // Привязываем обработчики кликов на элементы
-        this.projectsList.querySelectorAll('.project-selector-item').forEach(item => {
+        this.projectsList.innerHTML = createProjectHtml + projectsHtml;
+
+        // Привязываем обработчики кликов на элементы проектов (исключая ссылку на создание)
+        this.projectsList.querySelectorAll('.project-selector-item:not(.create-project-link)').forEach(item => {
             item.addEventListener('click', () => {
                 const id = item.dataset.id;
                 const name = item.dataset.name;
